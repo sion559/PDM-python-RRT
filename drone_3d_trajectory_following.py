@@ -4,6 +4,7 @@ Simulate a quadrotor following a 3D trajectory
 Author: Daniel Ingram (daniel-s-ingram)
 """
 
+import math
 from math import cos, sin
 import numpy as np
 from Quadrotor import Quadrotor
@@ -115,9 +116,9 @@ def quad_sim(start, x_c, y_c, z_c, obstacles, way_len):
 
         #EDIT waylen
         t = 0
-        i = (i + 1) % (way_len/2)
+        i = (i + 1)
         irun += 1
-        if irun >= way_len:
+        if irun >= way_len-1:
             break
 
     print("Done")
