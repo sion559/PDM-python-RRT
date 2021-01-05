@@ -2,6 +2,7 @@ import quadcopter,gui,controller
 import signal
 import sys
 import argparse
+import math
 
 
 #https://github.com/abhijitmajumdar/Quadcopter_simulator
@@ -11,6 +12,69 @@ TIME_SCALING = 4.0 # Any positive number(Smaller is faster). 1.0->Real Time, 0.0
 QUAD_DYNAMICS_UPDATE = 0.002 # seconds
 CONTROLLER_DYNAMICS_UPDATE = 0.005 # seconds
 run = True
+
+def dist(A, B):
+    dx = B[0] - A[0]
+    dy = B[1] - A[1]
+    dz = B[2] - A[2]
+    return math.sqrt(dx**2 + dy**2 + dz**2)
+
+def List_Natural_Yaw(path):
+    yaw = []
+    for Y in range(len(path)-1):
+        dx = path[Y+1][0] - path[Y][0]
+        dy = path[Y+1][1] - path[Y][1]
+        yaw.append(math.atan2(dy,dx))
+    return yaw
+
+
+class quadsim_P2P:
+    def __init__(self, start):
+        self.start = start
+        self.QUADCOPTER={'q1':{'position':start,'orientation':[0,0,0],'L':0.1735,'r':0.0665,'prop_size':[20,4.5],'weight':1.2}}
+        # Controller parameters
+        self.CONTROLLER_PARAMETERS = {'Motor_limits':[4000,9000],
+                            'Tilt_limits':[-10,10],
+                            'Yaw_Control_Limits':[-900,900],
+                            'Z_XY_offset':500,
+                            'Linear_PID':{'P':[250,250,6800],'I':[0.04,0.04,4.5],'D':[450,450,5000]},
+                            'Linear_To_Angular_Scaler':[1,1,0],
+                            'Yaw_Rate_Scaler':0.18,
+                            'Angular_PID':{'P':[22000,22000,1500],'I':[0,0,1.2],'D':[12000,12000,0]},
+                            }
+    
+        # Catch Ctrl+C to stop threads
+        signal.signal(signal.SIGINT, signal_handler)
+        # Make objects for quadcopter, gui and controller
+        self.quad = quadcopter.Quadcopter(self.QUADCOPTER)
+        self.gui_object = gui.GUI(quads=self.QUADCOPTER)
+        self.ctrl = controller.Controller_PID_Point2Point(self.quad.get_state,self.quad.get_time,self.quad.set_motor_speeds,params=self.CONTROLLER_PARAMETERS,quad_identifier='q1')
+                
+        
+    def run(self, path):
+        yaw = List_Natural_Yaw(path);
+        # Start the threads
+        self.quad.start_thread(dt=QUAD_DYNAMICS_UPDATE,time_scaling=TIME_SCALING)
+        self.ctrl.start_thread(update_rate=CONTROLLER_DYNAMICS_UPDATE,time_scaling=TIME_SCALING)
+        
+        # Update the GUI while switching between destination poitions
+        for goal,y in zip(path,yaw):          
+            self.ctrl.update_target(goal)
+            self.ctrl.update_yaw_target(y)
+            while(dist(self.quad.get_position('q1'), goal) > 0.5):
+                self.gui_object.quads['q1']['position'] = self.quad.get_position('q1')
+                self.gui_object.quads['q1']['orientation'] = self.quad.get_orientation('q1')
+                self.gui_object.update()
+                
+        self.quad.stop_thread()
+        self.ctrl.stop_thread()
+        
+    def place(self, pos):
+        self.quad.set_position(pos)
+        
+    def reset(self):
+        self.quad.set_position(self.start)
+
 
 def Single_Point2Point(start, path, yaw):
     # Set goals to go to
@@ -23,7 +87,7 @@ def Single_Point2Point(start, path, yaw):
                         'Tilt_limits':[-10,10],
                         'Yaw_Control_Limits':[-900,900],
                         'Z_XY_offset':500,
-                        'Linear_PID':{'P':[300,300,7000],'I':[0.04,0.04,4.5],'D':[450,450,5000]},
+                        'Linear_PID':{'P':[200,200,6000],'I':[0.04,0.04,4.5],'D':[450,450,5000]},
                         'Linear_To_Angular_Scaler':[1,1,0],
                         'Yaw_Rate_Scaler':0.18,
                         'Angular_PID':{'P':[22000,22000,1500],'I':[0,0,1.2],'D':[12000,12000,0]},
@@ -43,10 +107,11 @@ def Single_Point2Point(start, path, yaw):
         for goal,y in zip(GOALS,YAWS):
             ctrl.update_target(goal)
             ctrl.update_yaw_target(y)
-            for i in range(300):
+            while(dist(quad.get_position('q1'), goal) > 0.5):
                 gui_object.quads['q1']['position'] = quad.get_position('q1')
                 gui_object.quads['q1']['orientation'] = quad.get_orientation('q1')
                 gui_object.update()
+            
     quad.stop_thread()
     ctrl.stop_thread()
 

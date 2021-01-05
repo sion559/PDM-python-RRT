@@ -40,10 +40,10 @@ class Quadcopter():
             self.quads[key]['m3'] = Propeller(self.quads[key]['prop_size'][0],self.quads[key]['prop_size'][1])
             self.quads[key]['m4'] = Propeller(self.quads[key]['prop_size'][0],self.quads[key]['prop_size'][1])
             # From Quadrotor Dynamics and Control by Randal Beard
-            ixx=((2*self.quads[key]['weight']*self.quads[key]['r']**2)/5)+(2*self.quads[key]['weight']*self.quads[key]['L']**2)
-            iyy=ixx
-            izz=((2*self.quads[key]['weight']*self.quads[key]['r']**2)/5)+(4*self.quads[key]['weight']*self.quads[key]['L']**2)
-            self.quads[key]['I'] = np.array([[ixx,0,0],[0,iyy,0],[0,0,izz]])
+            #ixx=((2*self.quads[key]['weight']*self.quads[key]['r']**2)/5)+(2*self.quads[key]['weight']*self.quads[key]['L']**2)
+            #iyy=ixx
+            #izz=((2*self.quads[key]['weight']*self.quads[key]['r']**2)/5)+(4*self.quads[key]['weight']*self.quads[key]['L']**2)
+            self.quads[key]['I'] = np.array([[0.00232,0,0],[0,0.00232,0],[0,0,0.004]])
             self.quads[key]['invI'] = np.linalg.inv(self.quads[key]['I'])
         self.run = True
 
