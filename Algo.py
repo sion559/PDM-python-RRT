@@ -6,9 +6,8 @@ Created on Thu Dec  29 14:20:08 2021
 """
 
 import math
-from rrt import RRT
+from rrt_star import RRTStar
 from rrt_with_pathsmoothing import path_smoothing
-from drone_3d_trajectory_following import sim
 from quad_sim import Single_Point2Point
 
 show_animation = False
@@ -18,8 +17,7 @@ obstacleList = [
         (5, 5, 5, 1),
         (-3, 6, 3, 1),
         (4, -6, 6, 1),
-        (-7, 4, 7, 1)
-    ]  # [x,y,z,size]
+        (-7, 4, 7, 1)]  # [x,y,z,size]
 
 #start pos
 begin = [0,0,0]
@@ -27,8 +25,8 @@ begin = [0,0,0]
 end = [12,5,1]
 
 for i in range(10):
-    rrt = RRT(start=begin, goal=end, zone_Max=[15,15,15], zone_Min=[-15,-15,-1], obstacle_list=obstacleList, max_iter=500, expand_dis=3.0, path_resolution=0.5)
-    path = rrt.planning(collision=True)
+    rrt = RRTStar(start=begin, goal=end, obstacle_list=obstacleList, max_iter=500, expand_dis=3.0, path_resolution=0.5)
+    path = rrt.planning()
     if(path != None):
         break
 
@@ -51,7 +49,3 @@ for Y in range(len(way)-1):
 yaw.append(0)
 
 Single_Point2Point(begin, way, yaw)
-    
-#quad = sim()
-#quad.Simulate(begin, way, obstacleList)
-

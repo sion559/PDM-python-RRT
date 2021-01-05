@@ -39,8 +39,7 @@ class RRT:
                  start,
                  goal,
                  obstacle_list,
-                 zone_Max,
-                 zone_Min,
+                 search_zone=1.1,
                  expand_dis=3.0,
                  path_resolution=0.5,
                  goal_sample_rate=5,
@@ -56,8 +55,10 @@ class RRT:
         """
         self.start = self.Node(start[0], start[1], start[2])
         self.end = self.Node(goal[0], goal[1],  goal[2])
-        self.max = self.Node(zone_Max[0], zone_Max[1], zone_Max[2])
-        self.min = self.Node(zone_Min[0], zone_Min[1], zone_Min[2])
+        
+        
+        self.max = self.Node(self.end.x*search_zone, self.end.y*search_zone, self.end.z*search_zone)
+        self.min = self.Node(self.start.x*search_zone, self.start.y*search_zone, self.start.z*search_zone)
         self.expand_dis = expand_dis
         self.path_resolution = path_resolution
         self.goal_sample_rate = goal_sample_rate
