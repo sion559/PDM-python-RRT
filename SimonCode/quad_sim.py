@@ -3,7 +3,7 @@ import signal
 import sys
 import argparse
 import math
-
+from rrt_star import RRTStar
 
 #https://github.com/abhijitmajumdar/Quadcopter_simulator
 
@@ -13,25 +13,13 @@ QUAD_DYNAMICS_UPDATE = 0.002 # seconds
 CONTROLLER_DYNAMICS_UPDATE = 0.005 # seconds
 run = True
 
-def dist(A, B):
-    dx = B[0] - A[0]
-    dy = B[1] - A[1]
-    dz = B[2] - A[2]
-    return math.sqrt(dx**2 + dy**2 + dz**2)
-
-def List_Natural_Yaw(path):
-    yaw = []
-    for Y in range(len(path)-1):
-        dx = path[Y+1][0] - path[Y][0]
-        dy = path[Y+1][1] - path[Y][1]
-        yaw.append(math.atan2(dy,dx))
-    yaw.append(0)
-    return yaw
-
 
 class quadsim_P2P:
-    def __init__(self, start):
+    def __init__(self, start, obstacles):
         self.start = start
+        self.obs = obstacles
+        self.rrtIter = 1000
+        
         self.QUADCOPTER={'q1':{'position':start,'orientation':[0,0,0],'L':0.175,'r':0.0665,'prop_size':[8,3.8],'weight':0.5, 'motorWeight':0.035}}
         # Controller parameters
         self.CONTROLLER_PARAMETERS = {'Motor_limits':[2000,12000],  #4000,12000
@@ -49,42 +37,72 @@ class quadsim_P2P:
         signal.signal(signal.SIGINT, signal_handler)
         # Make objects for quadcopter, gui and controller
         self.quad = quadcopter.Quadcopter(self.QUADCOPTER)
-        self.gui_object = gui.GUI(quads=self.QUADCOPTER)
+        self.gui_object = gui.GUI(quads=self.QUADCOPTER, obs=obstacles)
+        self.display()
         self.ctrl = controller.Controller_PID_Point2Point(self.quad.get_state,self.quad.get_time,self.quad.set_motor_speeds,params=self.CONTROLLER_PARAMETERS,quad_identifier='q1')
                 
         
-    def run(self, path):
-        yaw = List_Natural_Yaw(path);
+    def run(self):
+        yaw = self.List_Natural_Yaw();
         # Start the threads
         self.quad.start_thread(dt=QUAD_DYNAMICS_UPDATE,time_scaling=TIME_SCALING)
         self.ctrl.start_thread(update_rate=CONTROLLER_DYNAMICS_UPDATE,time_scaling=TIME_SCALING)
         
         # Update the GUI while switching between destination poitions
-        for i in range(len(path)):          
-            self.ctrl.update_target(path[i])
+        for i in range(len(self.path)):          
+            self.ctrl.update_target(self.path[i])
             self.ctrl.update_yaw_target(yaw[i])
-            print("Goal = ", path[i])
-            while(dist(self.quad.get_position('q1'), path[i]) > 1):
-                self.gui_object.quads['q1']['position'] = self.quad.get_position('q1')
-                self.gui_object.quads['q1']['orientation'] = self.quad.get_orientation('q1')
-                self.gui_object.update()
+            print("Goal = ", self.path[i])
+            print("yl = ", len(yaw), " pl ", len(self.path))
+            while(self.dist(self.quad.get_position('q1'), self.path[i]) > 1):
+                self.display()
         
         vel = 1;
-        while(vel > 0 and dist(self.quad.get_position('q1'), path[-1]) > 0.2):
+        while(vel > 0 and self.dist(self.quad.get_position('q1'), self.path[-1]) > 0.2):
             vel_t = self.quad.get_linear_rate('q1')
             vel = vel_t[0]**2 + vel_t[1]**2 + vel_t[2]**2
-            self.gui_object.quads['q1']['position'] = self.quad.get_position('q1')
-            self.gui_object.quads['q1']['orientation'] = self.quad.get_orientation('q1')
-            self.gui_object.update()
+            self.display()
                 
         self.quad.stop_thread()
         self.ctrl.stop_thread()
+        
+    def display(self):
+        self.gui_object.quads['q1']['position'] = self.quad.get_position('q1')
+        self.gui_object.quads['q1']['orientation'] = self.quad.get_orientation('q1')
+        self.gui_object.update()
         
     def place(self, pos):
         self.quad.set_position(pos)
         
     def reset(self):
         self.quad.set_position(self.start)
+        
+    def plan(self, goal):
+        begin = self.quad.get_position('q1')
+        rrt = RRTStar(start=begin, goal=goal, obstacle_list=self.obs, max_iter=self.rrtIter, expand_dis=3.0, path_resolution=0.3)
+        path = rrt.planning()
+        if(path == None):
+            self.rrtIter += 500
+            return False
+        
+        path.reverse()
+        self.path = path
+        return True
+    
+    def dist(self, A, B):
+        dx = B[0] - A[0]
+        dy = B[1] - A[1]
+        dz = B[2] - A[2]
+        return math.sqrt(dx**2 + dy**2 + dz**2)
+
+    def List_Natural_Yaw(self):
+        yaw = []
+        for Y in range(len(self.path)-1):
+            dx = self.path[Y+1][0] - self.path[Y][0]
+            dy = self.path[Y+1][1] - self.path[Y][1]
+            yaw.append(math.atan2(dy,dx))
+        yaw.append(0)
+        return yaw
 
 
 def Single_Point2Point(start, path, yaw):

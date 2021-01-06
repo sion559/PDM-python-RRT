@@ -5,35 +5,30 @@ Created on Thu Dec  29 14:20:08 2021
 @author: Simon van Gemert
 """
 
-import math
 from rrt_star import RRTStar
-from quad_sim import Single_Point2Point
 from quad_sim import quadsim_P2P
 
-show_animation = False
-
-#list of spherical obstacles
+#list of cubical obstacles, with equal length and position a origen
+#TODO: size per as toevoegen, balk met een centerpunt
 obstacleList = [
         (5, 5, 5, 1),
         (-3, 6, 3, 1),
         (4, -6, 6, 1),
-        (-7, 4, 7, 1)]  # [x,y,z,size]
+        (-7, 4, 7, 1),
+        (7, 2, 10, 1)]  # [x,y,z,dx, dy, dz]
 
 #start pos
 begin = [0,0,0]
+
 #end pos
-end = [12,5,1]
+end = [3,5,1]
 
-for i in range(10):
-    rrt = RRTStar(start=begin, goal=end, obstacle_list=obstacleList, max_iter=500, expand_dis=3.0, path_resolution=0.5)
-    path = rrt.planning()
-       
-    if(path != None):
-        break
+#initiate simulator
+sims = quadsim_P2P(begin, obstacleList)
 
-#reverse path order
-path.reverse()
-
-sims = quadsim_P2P(begin)
-sims.run(path)
-#Single_Point2Point(begin, path, yaw)
+#plan a path from the current position to the goal
+while(not sims.plan(end)):
+    None
+    
+#move to the position
+sims.run()

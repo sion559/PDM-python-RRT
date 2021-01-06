@@ -3,11 +3,13 @@ import math
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as Axes3D
 import sys
+from itertools import product, combinations
 
 class GUI():
     # 'quad_list' is a dictionary of format: quad_list = {'quad_1_name':{'position':quad_1_position,'orientation':quad_1_orientation,'arm_span':quad_1_arm_span}, ...}
-    def __init__(self, quads):
+    def __init__(self, quads, obs):
         self.quads = quads
+        self.obstacles = obs
         self.fig = plt.figure()
         self.ax = Axes3D.Axes3D(self.fig)
         self.ax.set_xlim3d([-2.0, 2.0])
@@ -38,6 +40,9 @@ class GUI():
             self.quads[key]['l1'], = self.ax.plot([],[],[],color='blue',linewidth=3,antialiased=False)
             self.quads[key]['l2'], = self.ax.plot([],[],[],color='red',linewidth=3,antialiased=False)
             self.quads[key]['hub'], = self.ax.plot([],[],[],marker='o',color='green', markersize=6,antialiased=False)
+            # prepare some coordinates
+            for x,y,z,size in self.obstacles:
+                self.plot_opaque_cube(x,y,z,size)
 
     def update(self):
         for key in self.quads:
@@ -89,3 +94,14 @@ class GUI():
             x[0] -= 0.2
             x[1] -= 0.2
             self.ax.set_xlim3d(x)
+    
+    def plot_opaque_cube(self, x=1, y=1, z=2, l=2):
+        xx = [x, x, x+l, x+l, x]
+        yy = [y, y+l, y+l, y, y]
+        kwargs = {'alpha': 1, 'color': 'orange'}
+        self.ax.plot3D(xx, yy, [z]*5, **kwargs)
+        self.ax.plot3D(xx, yy, [z+l]*5, **kwargs)
+        self.ax.plot3D([x, x], [y, y], [z, z+l], **kwargs)
+        self.ax.plot3D([x, x], [y+l, y+l], [z, z+l], **kwargs)
+        self.ax.plot3D([x+l, x+l], [y+l, y+l], [z, z+l], **kwargs)
+        self.ax.plot3D([x+l, x+l], [y, y], [z, z+l], **kwargs)

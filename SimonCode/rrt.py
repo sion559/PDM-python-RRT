@@ -55,6 +55,8 @@ class RRT:
         """
         self.start = self.Node(start[0], start[1], start[2])
         self.end = self.Node(goal[0], goal[1],  goal[2])
+        self.goalDist = self.calc_dist_to_goal(start[0], start[1], start[2])
+        self.goalDir = [start[0]/self.goalDist, start[1]/self.goalDist, start[2]/self.goalDist]
         
         
         self.max = self.Node(self.end.x*search_zone, self.end.y*search_zone, self.end.z*search_zone)
@@ -162,6 +164,8 @@ class RRT:
             
         else:  # goal point sampling
             rnd = self.Node(self.end.x, self.end.y, self.end.z)"""
+            
+        #TODO generate in a cone
         rnd = self.Node(
             random.uniform(self.min.x, self.max.x),
             random.uniform(self.min.y, self.max.y),
@@ -219,11 +223,15 @@ class RRT:
             dx_list = [ox - x for x in node.path_x]
             dy_list = [oy - y for y in node.path_y]
             dz_list = [oz - z for z in node.path_z]
-            d_list = [dx**2 + dy**2 + dz**2 for (dx, dy, dz) in zip(dx_list, dy_list, dz_list)]
-            L = size
-            for d in d_list:
-                if d <= L:
+            
+            for x,y,z in zip(dx_list, dy_list, dz_list):
+                if x <= size and y <= size and z <= size:
                     return False
+                
+            #d_list = [dx**2 + dy**2 + dz**2 for (dx, dy, dz) in zip(dx_list, dy_list, dz_list)]
+            #for d in d_list:
+            #    if d <= size:
+            #        return False
         return True  # safe
 
     #editted for 3d
