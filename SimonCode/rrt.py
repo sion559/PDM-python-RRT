@@ -55,12 +55,17 @@ class RRT:
         """
         self.start = self.Node(start[0], start[1], start[2])
         self.end = self.Node(goal[0], goal[1],  goal[2])
-        self.goalDist = self.calc_dist_to_goal(start[0], start[1], start[2])
-        self.goalDir = [start[0]/self.goalDist, start[1]/self.goalDist, start[2]/self.goalDist]
+        
+        self.goalDist, goalTheta, goalPhi = self.calc_distance_and_angle(self.start,self.end)
+        self.goalDir = np.array([(goal[0]-start[0])/self.goalDist, (goal[1]-start[1])/self.goalDist, (goal[2]-start[2])/self.goalDist])
+        self.searchTheta = 3.14/2
+        self.R = np.array([[math.cos(goalTheta)*math.cos(goalPhi), -math.sin(goalTheta), math.cos(goalTheta)*math.sin(goalPhi)],
+                         [math.sin(goalTheta)*math.cos(goalPhi), math.cos(goalTheta), math.sin(goalTheta)*math.sin(goalPhi)],
+                         [-math.sin(goalPhi), 0, -math.sin(goalPhi)]])
         
         
-        self.max = self.Node(self.end.x*search_zone, self.end.y*search_zone, self.end.z*search_zone)
-        self.min = self.Node(self.start.x*search_zone, self.start.y*search_zone, self.start.z*search_zone)
+        #self.max = self.Node(self.end.x*search_zone, self.end.y*search_zone, self.end.z*search_zone)
+        #self.min = self.Node(self.start.x*search_zone, self.start.y*search_zone, self.start.z*search_zone)
         self.expand_dis = expand_dis
         self.path_resolution = path_resolution
         self.goal_sample_rate = goal_sample_rate
@@ -157,7 +162,7 @@ class RRT:
         dy = y - self.end.y
         dz = z - self.end.z
         return math.hypot(math.hypot(dx,dy), dz)
-
+    
     #editted for 3d
     def get_random_node(self):
         """if random.randint(0, 100) > self.goal_sample_rate:
@@ -166,10 +171,19 @@ class RRT:
             rnd = self.Node(self.end.x, self.end.y, self.end.z)"""
             
         #TODO generate in a cone
-        rnd = self.Node(
-            random.uniform(self.min.x, self.max.x),
-            random.uniform(self.min.y, self.max.y),
-            random.uniform(self.min.z, self.max.z))
+        L = random.uniform(0, self.goalDist)
+        r = random.uniform(-L*math.sin(self.searchTheta/2), L*math.sin(self.searchTheta/2))
+        p = random.uniform(0, 6.28)     #angle aroung goalDir
+        cone_center = self.goalDir*L
+        #print("L=", L, " at=", self.goalDir)
+        rNode = np.matmul(self.R,np.array([r*math.cos(p), r*math.sin(p), 0])) + cone_center
+        print(rNode)
+        rnd = self.Node(rNode[0], rNode[1], rNode[2])      
+                
+        #rnd = self.Node(
+        #    random.uniform(self.min.x, self.max.x),
+        #    random.uniform(self.min.y, self.max.y),
+        #    random.uniform(self.min.z, self.max.z))
         return rnd
 
     def draw_graph(self, rnd=None):

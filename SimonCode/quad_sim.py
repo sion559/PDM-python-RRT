@@ -53,7 +53,7 @@ class quadsim_P2P:
             self.ctrl.update_target(self.path[i])
             self.ctrl.update_yaw_target(yaw[i])
             print("Goal = ", self.path[i])
-            print("yl = ", len(yaw), " pl ", len(self.path))
+            #print("yl = ", len(yaw), " pl ", len(self.path))
             while(self.dist(self.quad.get_position('q1'), self.path[i]) > 1):
                 self.display()
         
@@ -82,7 +82,7 @@ class quadsim_P2P:
         rrt = RRTStar(start=begin, goal=goal, obstacle_list=self.obs, max_iter=self.rrtIter, expand_dis=3.0, path_resolution=0.3)
         path = rrt.planning()
         if(path == None):
-            self.rrtIter += 500
+            #self.rrtIter += 500
             return False
         
         path.reverse()
