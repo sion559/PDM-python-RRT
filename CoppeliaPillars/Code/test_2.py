@@ -6,13 +6,13 @@ from geometry_tools import *
 
 rad = math.radians
 
-targer_point = np.array([0, 0, 1])
+targer_point = np.array([-9, -10, 5])
 speed = 0.5
 
 r_tolerance = 1.0
 
-c_rep = 1.2
-r_field = 3.
+c_rep = 1.5
+r_field = 10.
 
 drone_pose = []
 
