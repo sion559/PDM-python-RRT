@@ -31,14 +31,8 @@ for i in range(10):
     if(path != None):
         break
 
-#way.reverse()
-print(path)
-yaw = []
-for Y in range(len(path)-1):
-    dx = path[Y+1][0] - path[Y][0]
-    dy = path[Y+1][1] - path[Y][1]
-    yaw.append(math.atan2(dy,dx))
-yaw.append(0)
+#reverse path order
+path.reverse()
 
 sims = quadsim_P2P(begin)
 sims.run(path)

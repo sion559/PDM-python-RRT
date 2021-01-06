@@ -25,13 +25,13 @@ class quadsim_P2P:
         self.simHandle = simHandle
         self.objectHandle = objectHandle
         
-        self.QUADCOPTER={'q1':{'position':start,'orientation':[0,0,0],'L':0.175,'r':0.0665,'prop_size':[20,4.5],'weight':0.5}}
+        self.QUADCOPTER={'q1':{'position':start,'orientation':[0,0,0],'L':0.175,'r':0.0665,'prop_size':[8,3.8],'weight':0.5, 'motorWeight':0.035}}
         # Controller parameters
         self.CONTROLLER_PARAMETERS = {'Motor_limits':[4000,9000],
                             'Tilt_limits':[-10,10],
                             'Yaw_Control_Limits':[-900,900],
                             'Z_XY_offset':500,
-                            'Linear_PID':{'P':[250,250,6800],'I':[0.04,0.04,4.5],'D':[450,450,5000]},
+                            'Linear_PID':{'P':[290,290,6700],'I':[0.04,0.04,4.8],'D':[410,410,5000]},
                             'Linear_To_Angular_Scaler':[1,1,0],
                             'Yaw_Rate_Scaler':0.18,
                             'Angular_PID':{'P':[22000,22000,1500],'I':[0,0,1.2],'D':[12000,12000,0]},
@@ -52,12 +52,19 @@ class quadsim_P2P:
         self.ctrl.start_thread(update_rate=CONTROLLER_DYNAMICS_UPDATE,time_scaling=TIME_SCALING)
         
         # Update the GUI while switching between destination poitions
-        for goal,y in zip(path,yaw):          
-            self.ctrl.update_target(goal)
-            self.ctrl.update_yaw_target(y)
-            while(self.dist(self.quad.get_position('q1'), goal) > 0.5):
+        for i in range(len(path)):          
+            self.ctrl.update_target(path[i])
+            self.ctrl.update_yaw_target(yaw[i])
+            print("Goal = ", path[i])
+            while(self.dist(self.quad.get_position('q1'), path[i]) > 1):
                 sim.simxSetObjectPosition(self.simHandle, self.objectHandle, -1, self.quad.get_position('q1'), sim.simx_Opmode_non_blocking)
-                
+        
+        vel = 1;
+        while(vel > 0 and self.dist(self.quad.get_position('q1'), path[-1]) > 0.2):
+            vel_t = self.quad.get_linear_rate('q1')
+            vel = vel_t[0]**2 + vel_t[1]**2 + vel_t[2]**2
+            sim.simxSetObjectPosition(self.simHandle, self.objectHandle, -1, self.quad.get_position('q1'), sim.simx_Opmode_non_blocking)
+            
         self.quad.stop_thread()
         self.ctrl.stop_thread()
         
@@ -73,6 +80,7 @@ class quadsim_P2P:
             dx = path[Y+1][0] - path[Y][0]
             dy = path[Y+1][1] - path[Y][1]
             yaw.append(math.atan2(dy,dx))
+        yaw.append(0)
         return yaw
 
     def dist(A, B):
@@ -81,75 +89,7 @@ class quadsim_P2P:
         dz = B[2] - A[2]
         return math.sqrt(dx**2 + dy**2 + dz**2)
 
-  yaw = List_Natural_Yaw(path)
-    
-    # Define the quadcopters
-    QUADCOPTER={'q1':{'position':start,'orientation':[0,0,0],'L':0.3,'r':0.1,'prop_size':[10,4.5],'weight':1.2}}
-    # Controller parameters
-    CONTROLLER_PARAMETERS = {'Motor_limits':[4000,9000],
-                        'Tilt_limits':[-10,10],
-                        'Yaw_Control_Limits':[-900,900],
-                        'Z_XY_offset':500,
-                        'Linear_PID':{'P':[300,300,7000],'I':[0.04,0.04,4.5],'D':[450,450,5000]},
-                        'Linear_To_Angular_Scaler':[1,1,0],
-                        'Yaw_Rate_Scaler':0.18,
-                        'Angular_PID':{'P':[22000,22000,1500],'I':[0,0,1.2],'D':[12000,12000,0]},
-                        }
-
-    # Catch Ctrl+C to stop threads
-    signal.signal(signal.SIGINT, signal_handler)
-    # Make objects for quadcopter, gui and controller
-    quad = quadcopter.Quadcopter(QUADCOPTER)
-    gui_object = gui.GUI(quads=QUADCOPTER)
-    ctrl = controller.Controller_PID_Point2Point(quad.get_state,quad.get_time,quad.set_motor_speeds,params=CONTROLLER_PARAMETERS,quad_identifier='q1')
-    # Start the threads
-    quad.start_thread(dt=QUAD_DYNAMICS_UPDATE,time_scaling=TIME_SCALING)
-    ctrl.start_thread(update_rate=CONTROLLER_DYNAMICS_UPDATE,time_scaling=TIME_SCALING)
-    # Update the GUI while switching between destination poitions
-    while(run==True):
-        for goal,y in zip(path,yaw):
-            ctrl.update_target(goal)
-            ctrl.update_yaw_target(y)
-            while(dist(quad.get_position('q1'), goal) > 0.5):
-                sim.simxSetObjectPosition(simHandle, objectHandle, -1, quad.get_position('q1'), sim.simx_Opmode_non_blocking)
-                gui_object.quads['q1']['position'] = quad.get_position('q1')
-                gui_object.quads['q1']['orientation'] = quad.get_orientation('q1')
-                gui_object.update()
-    quad.stop_thread()
-    ctrl.stop_thread()
-
-   # Define the quadcopters
-    QUADCOPTER={'q1':{'position':[0,0,0],'orientation':[0,0,0],'L':0.3,'r':0.1,'prop_size':[10,4.5],'weight':1.2}}
-    # Controller parameters
-    CONTROLLER_PARAMETERS = {'Motor_limits':[4000,9000],
-                        'Tilt_limits':[-10,10],
-                        'Yaw_Control_Limits':[-900,900],
-                        'Z_XY_offset':500,
-                        'Linear_PID':{'P':[2000,2000,7000],'I':[0.25,0.25,4.5],'D':[50,50,5000]},
-                        'Linear_To_Angular_Scaler':[1,1,0],
-                        'Yaw_Rate_Scaler':0.18,
-                        'Angular_PID':{'P':[22000,22000,1500],'I':[0,0,1.2],'D':[12000,12000,0]},
-                        }
-
-    # Catch Ctrl+C to stop threads
-    signal.signal(signal.SIGINT, signal_handler)
-    # Make objects for quadcopter, gui and controller
-    quad = quadcopter.Quadcopter(QUADCOPTER)
-    gui_object = gui.GUI(quads=QUADCOPTER)
-    ctrl = controller.Controller_PID_Velocity(quad.get_state,quad.get_time,quad.set_motor_speeds,params=CONTROLLER_PARAMETERS,quad_identifier='q1')
-    # Start the threads
-    quad.start_thread(dt=QUAD_DYNAMICS_UPDATE,time_scaling=TIME_SCALING)
-    ctrl.start_thread(update_rate=CONTROLLER_DYNAMICS_UPDATE,time_scaling=TIME_SCALING)
-    # Update the GUI while switching between destination poitions
-    while(run==True):
-        for goal in path:
-            ctrl.update_target(goal)
-            for i in range(150):
-                gui_object.quads['q1']['position'] = quad.get_position('q1')
-                gui_object.quads['q1']['orientation'] = quad.get_orientation('q1')
-                gui_object.update()
-    quad.stop_thread()
-    ctrl.stop_thread()
+ 
 def parse_args():
     parser = argparse.ArgumentParser(description="Quadcopter Simulator")
     parser.add_argument("--sim", help='single_p2p, multi_p2p or single_velocity', default='single_p2p')

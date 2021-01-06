@@ -8,7 +8,7 @@ import math
 #https://github.com/abhijitmajumdar/Quadcopter_simulator
 
 # Constants
-TIME_SCALING = 4.0 # Any positive number(Smaller is faster). 1.0->Real Time, 0.0->Run as fast as possible
+TIME_SCALING = 1.0 # Any positive number(Smaller is faster). 1.0->Real Time, 0.0->Run as fast as possible
 QUAD_DYNAMICS_UPDATE = 0.002 # seconds
 CONTROLLER_DYNAMICS_UPDATE = 0.005 # seconds
 run = True
@@ -25,19 +25,21 @@ def List_Natural_Yaw(path):
         dx = path[Y+1][0] - path[Y][0]
         dy = path[Y+1][1] - path[Y][1]
         yaw.append(math.atan2(dy,dx))
+    yaw.append(0)
     return yaw
 
 
 class quadsim_P2P:
     def __init__(self, start):
         self.start = start
-        self.QUADCOPTER={'q1':{'position':start,'orientation':[0,0,0],'L':0.1735,'r':0.0665,'prop_size':[20,4.5],'weight':1.2}}
+        self.QUADCOPTER={'q1':{'position':start,'orientation':[0,0,0],'L':0.175,'r':0.0665,'prop_size':[8,3.8],'weight':0.5, 'motorWeight':0.035}}
         # Controller parameters
-        self.CONTROLLER_PARAMETERS = {'Motor_limits':[4000,9000],
+        self.CONTROLLER_PARAMETERS = {'Motor_limits':[2000,12000],  #4000,12000
                             'Tilt_limits':[-10,10],
                             'Yaw_Control_Limits':[-900,900],
                             'Z_XY_offset':500,
-                            'Linear_PID':{'P':[250,250,6800],'I':[0.04,0.04,4.5],'D':[450,450,5000]},
+                            #'Linear_PID':{'P':[1,1,23.33]*300,'I':[0.01,0.01,1.112]*4,'D':[3,3,33]*150},
+                            'Linear_PID':{'P':[290,290,6700],'I':[0.04,0.04,4.8],'D':[410,410,5000]},
                             'Linear_To_Angular_Scaler':[1,1,0],
                             'Yaw_Rate_Scaler':0.18,
                             'Angular_PID':{'P':[22000,22000,1500],'I':[0,0,1.2],'D':[12000,12000,0]},
@@ -58,13 +60,22 @@ class quadsim_P2P:
         self.ctrl.start_thread(update_rate=CONTROLLER_DYNAMICS_UPDATE,time_scaling=TIME_SCALING)
         
         # Update the GUI while switching between destination poitions
-        for goal,y in zip(path,yaw):          
-            self.ctrl.update_target(goal)
-            self.ctrl.update_yaw_target(y)
-            while(dist(self.quad.get_position('q1'), goal) > 0.5):
+        for i in range(len(path)):          
+            self.ctrl.update_target(path[i])
+            self.ctrl.update_yaw_target(yaw[i])
+            print("Goal = ", path[i])
+            while(dist(self.quad.get_position('q1'), path[i]) > 1):
                 self.gui_object.quads['q1']['position'] = self.quad.get_position('q1')
                 self.gui_object.quads['q1']['orientation'] = self.quad.get_orientation('q1')
                 self.gui_object.update()
+        
+        vel = 1;
+        while(vel > 0 and dist(self.quad.get_position('q1'), path[-1]) > 0.2):
+            vel_t = self.quad.get_linear_rate('q1')
+            vel = vel_t[0]**2 + vel_t[1]**2 + vel_t[2]**2
+            self.gui_object.quads['q1']['position'] = self.quad.get_position('q1')
+            self.gui_object.quads['q1']['orientation'] = self.quad.get_orientation('q1')
+            self.gui_object.update()
                 
         self.quad.stop_thread()
         self.ctrl.stop_thread()

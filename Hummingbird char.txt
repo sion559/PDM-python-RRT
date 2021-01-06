@@ -1,0 +1,11 @@
+datasheet hummingbird: https://pdf.directindustry.com/pdf/asctec/safety-data-sheet-asctec-hummingbird/182278-674192.html
+user manual: http://robotics.caltech.edu/~ndutoit/wiki/images/7/70/AscTec_AutoPilot_manual_v1.0_small.pdf
+motor: https://www.hacker-motor-shop.com/outrunner-electric-motor-a20-50-s-evo-1088.htm?shop=hacker_e&SessionId=&a=article&ProdNr=97800001&p=16&rdeocl=1&rdetpl=productpage&rdebox=box1
+
+
+propellor: dia=8inch, pitch=3.8inch, m=6g
+	- based on motor characteristics
+
+motor: U=12V, kv=1088, kt=0.067, m=29g
+	-based om motor characteristics
+	-kt estimated on power and consumption stats
