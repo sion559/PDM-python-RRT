@@ -219,13 +219,13 @@ class RRT:
             return False
 
         #calculate the distance between obstacle center and node
-        for (ox, oy, oz, size) in obstacleList:
+        for (ox, oy, oz, dx, dy, dz) in obstacleList:
             dx_list = [ox - x for x in node.path_x]
             dy_list = [oy - y for y in node.path_y]
             dz_list = [oz - z for z in node.path_z]
             
             for x,y,z in zip(dx_list, dy_list, dz_list):
-                if x <= size and y <= size and z <= size:
+                if x <= dx and y <= dy and z <= dz:
                     return False
                 
             #d_list = [dx**2 + dy**2 + dz**2 for (dx, dy, dz) in zip(dx_list, dy_list, dz_list)]

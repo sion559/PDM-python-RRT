@@ -41,8 +41,8 @@ class GUI():
             self.quads[key]['l2'], = self.ax.plot([],[],[],color='red',linewidth=3,antialiased=False)
             self.quads[key]['hub'], = self.ax.plot([],[],[],marker='o',color='green', markersize=6,antialiased=False)
             # prepare some coordinates
-            for x,y,z,size in self.obstacles:
-                self.plot_opaque_cube(x,y,z,size)
+            for x,y,z,dx,dy,dz in self.obstacles:
+                self.plot_opaque_cube(x,y,z,dx,dy,dz)
 
     def update(self):
         for key in self.quads:
@@ -95,13 +95,13 @@ class GUI():
             x[1] -= 0.2
             self.ax.set_xlim3d(x)
     
-    def plot_opaque_cube(self, x=1, y=1, z=2, l=2):
-        xx = [x, x, x+l, x+l, x]
-        yy = [y, y+l, y+l, y, y]
+    def plot_opaque_cube(self, x, y, z, dx, dy, dz):
+        xx = [x, x, x+dx, x+dx, x]
+        yy = [y, y+dy, y+dy, y, y]
         kwargs = {'alpha': 1, 'color': 'orange'}
-        self.ax.plot3D(xx, yy, [z]*5, **kwargs)
-        self.ax.plot3D(xx, yy, [z+l]*5, **kwargs)
-        self.ax.plot3D([x, x], [y, y], [z, z+l], **kwargs)
-        self.ax.plot3D([x, x], [y+l, y+l], [z, z+l], **kwargs)
-        self.ax.plot3D([x+l, x+l], [y+l, y+l], [z, z+l], **kwargs)
-        self.ax.plot3D([x+l, x+l], [y, y], [z, z+l], **kwargs)
+        self.ax.plot3D(xx, yy, [z], **kwargs)
+        self.ax.plot3D(xx, yy, [z+dz], **kwargs)
+        self.ax.plot3D([x, x], [y, y], [z, z+dz], **kwargs)
+        self.ax.plot3D([x, x], [y+dy, y+dy], [z, z+dz], **kwargs)
+        self.ax.plot3D([x+dx, x+dx], [y+dy, y+dy], [z, z+dz], **kwargs)
+        self.ax.plot3D([x+dx, x+dx], [y, y], [z, z+dz], **kwargs)

@@ -11,11 +11,11 @@ from quad_sim import quadsim_P2P
 #list of cubical obstacles, with equal length and position a origen
 #TODO: size per as toevoegen, balk met een centerpunt
 obstacleList = [
-        (5, 5, 5, 1),
-        (-3, 6, 3, 1),
-        (4, -6, 6, 1),
-        (-7, 4, 7, 1),
-        (7, 2, 10, 1)]  # [x,y,z,dx, dy, dz]
+        (5, 5, 5, 1, 1, 1),
+        (-3, 6, 3, 1, 1, 1),
+        (4, -6, 6, 1, 1, 1),
+        (-7, 4, 7, 1, 1, 1),
+        (7, 2, 10, 1, 1, 1)]  # [x,y,z,dx, dy, dz]
 
 #start pos
 begin = [0,0,0]
