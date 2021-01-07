@@ -59,10 +59,12 @@ if __name__=="__main__":
     obst_count = 14
     obst_list = []
 
+    #obstacles list
     for i in range(obst_count):
-        err, Obst = sim.simxGetObjectHandle(
-            clientID, 'collum_'+str(i), sim.simx_opmode_blocking)
+        string = 'column'+str(i)
+        err, Obst = sim.simxGetObjectHandle(clientID, string, sim.simx_opmode_blocking)
         obst_pose = flib.get_pos(clientID, Obst)
+        print(string, "=", obst_pose)
         obst_list.append(obst_pose)
 
 
