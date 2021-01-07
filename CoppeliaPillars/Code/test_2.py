@@ -139,7 +139,20 @@ def main():
     if err == -1:
         print("No Quadricopter")
 
-    sim.simxStartSimulation(clientID, sim.simx_opmode_blocking)
+    sim.simxStartSimulation(clientID, sim.simx_opmode_oneshot)
+    # enable the synchronous mode on the client:
+    sim.simxSynchronous(clientID,1);
+    
+    # start the simulation:
+    sim.simxStartSimulation(clientID,sim.simx_opmode_blocking);
+    
+    # enable streaming of a value:
+    anyValue = sim.simxGetIntegerSignal(clientID,"anyValue",sim.simx_opmode_streaming)
+    
+    # enable streaming of the iteration counter:
+    iteration = sim.simxGetIntegerSignal(clientID,"iteration",sim.simx_opmode_streaming)
+
+    
     print("is connected!!!")
     
     
@@ -194,6 +207,9 @@ def main():
         err = sim.simxSetObjectPosition(clientID, Quadricopter, -1,
                                          pos, sim.simx_opmode_blocking)
         err = sim.simxSetObjectOrientation(clientID, Quadricopter, -1, ori, sim.simx_opmode_blocking)
+        
+        sim.simxSynchronousTrigger(clientID)
+        sim.simxGetPingTime(clientID)
     
     sim.simxFinish(clientID)
 
