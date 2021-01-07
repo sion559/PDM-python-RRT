@@ -91,3 +91,21 @@ def get_pos(clientID, QuadricopterT):
 def get_rot(clientID, QuadricopterT):
     err, orientation = vrep.simxGetObjectOrientation(clientID, QuadricopterT, -1, vrep.simx_opmode_oneshot_wait)
     return np.array([orientation[0],orientation[1],orientation[2]])
+
+#def simxGetObjectPosition(clientID, objectHandle, relativeToObjectHandle, operationMode):
+# def simxGetFloatingParameter(clientID, paramIdentifier, operationMode):
+#self.set_float_parameter(vrep.sim_floatparam_simulation_time_step, 25)
+
+#these are the parameters you can obtain https://github.com/ycps/vrep-env/blob/fd64b390e3ebb1409e68de423969e888b9730a6f/vrep_env/vrep.py
+def get_size(clientID, obstacle):
+    size = np.empty(6)
+    err, size[0] = vrep.simxGetFloatingParameter(obstacle, vrep.sim_objfloatparam_objbbox_min_x, vrep.simx_opmode_oneshot_wait)
+    err, size[1] = vrep.simxGetFloatingParameter(obstacle, vrep.sim_objfloatparam_objbbox_min_y, vrep.simx_opmode_oneshot_wait)
+    err, size[2] = vrep.simxGetFloatingParameter(obstacle, vrep.sim_objfloatparam_objbbox_min_z, vrep.simx_opmode_oneshot_wait)
+    err, size[3] = vrep.simxGetFloatingParameter(obstacle, vrep.sim_objfloatparam_objbbox_max_x, vrep.simx_opmode_oneshot_wait)
+    err, size[4] = vrep.simxGetFloatingParameter(obstacle, vrep.sim_objfloatparam_objbbox_max_y, vrep.simx_opmode_oneshot_wait)
+    err, size[5] = vrep.simxGetFloatingParameter(obstacle, vrep.sim_objfloatparam_objbbox_max_z, vrep.simx_opmode_oneshot_wait)
+    
+    if err < 1:
+        print("ERROR, ERROR, can't retrieve size")
+    return size
