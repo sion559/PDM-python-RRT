@@ -7,7 +7,6 @@ author: Atsushi Sakai(@Atsushi_twi)
 """
 
 import math
-import numpy as np
 #sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../RRT/")
 
 try:
@@ -42,8 +41,10 @@ class RRTStar(RRT):
 
         start:Start Position [x,y,z]
         goal:Goal Position [x,y,z]
-        obstacleList:obstacle Positions [[x,y,z,size],...]
-        randArea:Random Sampling Area [min,max]
+        obstacleList:obstacle Positions [[pos_x, pos_y, pos_z, len_x, len_y, len_z],...]
+        searchTheta: angles for conical search area
+        max_iter: maximum nuber of iteration in which to find the path
+        connect_circle_dist: circle radius in which optimize node connections
 
         """
         super().__init__(obstacle_list, expand_dis,
@@ -51,36 +52,22 @@ class RRTStar(RRT):
         self.connect_circle_dist = connect_circle_dist
         self.search_until_max_iter = search_until_max_iter
         self.searchTheta = searchTheta
+        self.pathLen = 0
 
     #edit for 3d
-    def planning(self,start, goal):
+    def planning(self):
         """
-        rrt star path planning
-
-        animation: flag for animation on or off .
+        planning
+        plan a path between the start and goal nodes.
+        prePlan(start, goal) needs to be called first of this function will fail
+        
+        Returns 'None' if no path can be found
+        Returns path when a valid path is found
+        
         """
-                
-        self.start = self.Node(start[0], start[1], start[2])
-        self.end = self.Node(goal[0], goal[1],  goal[2])
-        self.goal_node = self.Node(goal[0], goal[1], goal[2])
-        #setup for conical search
-        self.goalDist, goalTheta, goalPhi = self.calc_distance_and_angle(self.start,self.end)
-        self.goalDist *= 1.1
-        self.goalDir = np.array([(goal[0]-start[0])/self.goalDist, (goal[1]-start[1])/self.goalDist, (goal[2]-start[2])/self.goalDist])
-        self.R = np.array([[math.cos(goalTheta)*math.cos(goalPhi), -math.sin(goalTheta), math.cos(goalTheta)*math.sin(goalPhi)],
-                         [math.sin(goalTheta)*math.cos(goalPhi), math.cos(goalTheta), math.sin(goalTheta)*math.sin(goalPhi)],
-                         [-math.sin(goalPhi), 0, -math.sin(goalPhi)]])
-        self.R = np.linalg.inv(self.R)
-        self.constSinTheta = math.sin(goalTheta/2)
         
-        
-        for (ox, oy, oz, dx, dy, dz) in self.obstacle_list:
-            ex = goal[0]-ox
-            ey = goal[1]-oy
-            ez = goal[2]-oz                  
-            if ex >= 0 and ex <= dx and ey >= 0 and ey <= dy and ez >= 0 and ez <= dz:
-                print("Goal is in a box")
-                return None
+        if(self.imposible == True):
+            return None        
         
         self.node_list = [self.start]
         for i in range(self.max_iter):
@@ -113,7 +100,10 @@ class RRTStar(RRT):
             if ((not self.search_until_max_iter) and new_node):  # if reaches goal
                 last_index = self.search_best_goal_node()
                 if last_index is not None:
-                    return self.generate_final_course(last_index)
+                    tmp = self.generate_final_course(last_index)
+                    tmp.reverse()
+                    self.pathLen = len(tmp)
+                    return tmp
 
         print("reached max iteration")
 
@@ -123,6 +113,7 @@ class RRTStar(RRT):
 
         return None
 
+    #ORIGINAL
     def choose_parent(self, new_node, near_inds):
         """
         Computes the cheapest point to new_node contained in the list
@@ -260,6 +251,7 @@ class RRTStar(RRT):
         d, _, _ = self.calc_distance_and_angle(from_node, to_node)
         return from_node.cost + d
 
+    #ORIGINAL
     def propagate_cost_to_leaves(self, parent_node):
 
         for node in self.node_list:

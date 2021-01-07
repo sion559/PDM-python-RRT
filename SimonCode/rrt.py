@@ -47,7 +47,7 @@ class RRT:
         start:Start Position [x,y,z]
         goal:Goal Position [x,y,z]
         obstacleList:obstacle Positions [[x,y,z,size],...]
-        randArea:Random Sampling Area [min,max]
+        max_iter: maximum nuber of iteration in which to find the path
 
         """
         
@@ -57,10 +57,43 @@ class RRT:
         self.max_iter = max_iter
         self.obstacle_list = obstacle_list
         self.node_list = []
+        self.imposible = True
+       
+    #HOMEBREW
+    def prePlan(self, start, goal):
+        """
+        prePlan
+        prepare for search. sets both the goal and start
+        
+        start: 3d-vector with start position
+        goal: 3d-vetor with goal position
+        """
+        self.start = self.Node(start[0], start[1], start[2])
+        self.end = self.Node(goal[0], goal[1],  goal[2])
+        self.goal_node = self.end
+        #setup for conical search
+        self.goalDist, goalTheta, goalPhi = self.calc_distance_and_angle(self.start,self.end)
+        self.goalDist *= 1.1
+        self.goalDir = np.array([(goal[0]-start[0])/self.goalDist, (goal[1]-start[1])/self.goalDist, (goal[2]-start[2])/self.goalDist])
+        self.R = np.array([[math.cos(goalTheta)*math.cos(goalPhi), -math.sin(goalTheta), math.cos(goalTheta)*math.sin(goalPhi)],
+                         [math.sin(goalTheta)*math.cos(goalPhi), math.cos(goalTheta), math.sin(goalTheta)*math.sin(goalPhi)],
+                         [-math.sin(goalPhi), 0, -math.sin(goalPhi)]])
+        self.R = np.linalg.inv(self.R)
+        self.constSinTheta = math.sin(goalTheta/2)
+        
+        for (ox, oy, oz, dx, dy, dz) in self.obstacle_list:
+            ex = goal[0]-ox
+            ey = goal[1]-oy
+            ez = goal[2]-oz                  
+            if ex >= 0 and ex <= dx and ey >= 0 and ey <= dy and ez >= 0 and ez <= dz:
+                print("Goal is in a box")
+                return None
+        
         self.imposible = False
         
+        
     #editted for 3d
-    def planning(self, animation=False, collision=True):
+    def planning(self, animation=False):
         """
         rrt path planning
 
@@ -78,7 +111,7 @@ class RRT:
 
             new_node = self.steer(nearest_node, rnd_node, self.expand_dis)
 
-            if collision and self.check_collision(new_node, self.obstacle_list):
+            if self.check_collision(new_node, self.obstacle_list):
                 self.node_list.append(new_node)
 
             if animation and i % 5 == 0:
@@ -152,12 +185,14 @@ class RRT:
         dz = z - self.end.z
         return math.hypot(math.hypot(dx,dy), dz)
     
-    #editted for 3d
+    #HOMEBREW
     def get_random_node(self):
-        """if random.randint(0, 100) > self.goal_sample_rate:
-            
-        else:  # goal point sampling
-            rnd = self.Node(self.end.x, self.end.y, self.end.z)"""
+        """
+        get_random_node
+        generate a random node from a conical field
+        
+        Returns random node
+        """
             
         #TODO generate in a cone
         L = random.uniform(0, self.goalDist)
@@ -168,7 +203,8 @@ class RRT:
         rnd = self.Node(rNode[0], rNode[1], rNode[2])      
         
         return rnd
-
+    
+    #ORIGINAL
     def draw_graph(self, rnd=None):
         plt.clf()
         # for stopping simulation with the esc key.
@@ -191,6 +227,7 @@ class RRT:
         plt.grid(True)
         plt.pause(0.01)
 
+    #ORIGINAL
     @staticmethod
     def plot_circle(x, y, size, color="-b"):  # pragma: no cover
         deg = list(range(0, 360, 5))
@@ -207,7 +244,7 @@ class RRT:
  
         return dlist.index(min(dlist))
 
-    #editted for 3d, need configuring for square obstacles
+    #edit for 3d and rectangular obstacles
     @staticmethod
     def check_collision(node, obstacleList):
         

@@ -8,7 +8,6 @@ Created on Thu Dec  29 14:20:08 2021
 from quad_sim import quadsim_P2P
 
 #list of cubical obstacles, with equal length and position a origen
-#TODO: size per as toevoegen, balk met een centerpunt
 obstacleList = [
         (3.5, 3.5, 3.5, 1, 2, 2),
         (-3, 6, 4, 1, 2, 1),
@@ -30,5 +29,12 @@ sims = quadsim_P2P(begin, obstacleList)
 while(not sims.plan(end)):
     None
     
+    
+sims.iterRun_start()
+while sims.iterRunGo:
+    print("pos = ",sims.iterRun_move())
+    sims.display()
+    
+    
 #move to the position
-sims.run()
+#sims.autorun()
