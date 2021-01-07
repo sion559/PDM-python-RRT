@@ -105,3 +105,56 @@ class GUI():
         self.ax.plot3D([x, x], [y+dy, y+dy], [z, z+dz], **kwargs)
         self.ax.plot3D([x+dx, x+dx], [y+dy, y+dy], [z, z+dz], **kwargs)
         self.ax.plot3D([x+dx, x+dx], [y, y], [z, z+dz], **kwargs)
+
+        bot = [(x, y, z),
+               (x + dx, y, z),
+               (x + dx, y + dy, z),
+               (x, y+dy, z)]
+        
+        top = [ (x, y, z + dz),
+                (x + dx, y, z + dz),
+                (x + dx, y + dy, z + dz),
+                (x, y+dy, z + dz)]
+        
+        left = [(x, y, z),
+                (x, y + dy, z),
+                (x, y + dy, z + dz),
+                (x, y, z + dz)]
+
+        right = [(x + dx, y, z),
+                 (x + dx, y + dy, z),
+                 (x + dx, y + dy, z + dz),
+                 (x + dx, y, z + dz)]
+
+        front = [(x, y, z),
+                 (x + dx, y, z),
+                 (x + dx, y, z + dz),
+                 (x, y, z + dz)]
+
+        back =  [(x, y + dy, z),
+                 (x + dx, y + dy, z),
+                 (x + dx, y + dy, z + dz),
+                 (x, y + dy, z + dz)]
+
+        face1 = mp3d.art3d.Poly3DCollection([bot], alpha=0.3, linewidth=1)
+        face2 = mp3d.art3d.Poly3DCollection([top], alpha=0.3, linewidth=1)
+        face3 = mp3d.art3d.Poly3DCollection([left], alpha=0.3, linewidth=1)        
+        face4 = mp3d.art3d.Poly3DCollection([right], alpha=0.3, linewidth=1)        
+        face5 = mp3d.art3d.Poly3DCollection([front], alpha=0.3, linewidth=1)        
+        face6 = mp3d.art3d.Poly3DCollection([back], alpha=0.3, linewidth=1)        
+
+        # This is the key step to get transparency working
+        alpha = 0.2
+        face1.set_facecolor((0, 0, 1, alpha))
+        face2.set_facecolor((0, 0, 1, alpha))
+        face3.set_facecolor((0, 0, 1, alpha))
+        face4.set_facecolor((0, 0, 1, alpha))
+        face5.set_facecolor((0, 0, 1, alpha))
+        face6.set_facecolor((0, 0, 1, alpha))
+
+        self.ax.add_collection3d(face1)
+        self.ax.add_collection3d(face2)
+        self.ax.add_collection3d(face3)
+        self.ax.add_collection3d(face4)
+        self.ax.add_collection3d(face5)
+        self.ax.add_collection3d(face6)
