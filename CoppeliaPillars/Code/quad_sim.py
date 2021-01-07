@@ -7,10 +7,10 @@ from rrt_star import RRTStar
 #https://github.com/abhijitmajumdar/Quadcopter_simulator
 
 # Constants
-TIME_SCALING = 6.0 # Any positive number(Smaller is faster). 1.0->Real Time, 0.0->Run as fast as possible
-QUAD_DYNAMICS_UPDATE = 0.003 # seconds
-CONTROLLER_DYNAMICS_UPDATE = 0.005 # seconds
-NEXT_GOAL_DISTANCE = 1      #distance from current potion to path node neccesary to move to the next path node
+TIME_SCALING = 2.0 # Any positive number(Smaller is faster). 1.0->Real Time, 0.0->Run as fast as possible
+QUAD_DYNAMICS_UPDATE = 0.002 # seconds
+CONTROLLER_DYNAMICS_UPDATE = 0.002 # seconds
+NEXT_GOAL_DISTANCE = 0.5      #distance from current potion to path node neccesary to move to the next path node
 MINIMAL_END_DISTANCE = 0.1  #distance from end goal that indicated succesfull reach
 END_GOAL_VELOCITY = 0.01    #velocity at the end goal the indicates succesfull reach
 
@@ -59,7 +59,7 @@ class quadsim_P2P:
                             'Z_XY_offset':500,
                             #'Linear_PID':{'P':[1,1,23.33]*300,'I':[0.01,0.01,1.112]*4,'D':[3,3,33]*150},
                             #'Linear_PID':{'P':[290,290,6000],'I':[0.042,0.042,5],'D':[410,410,5000]},
-                            'Linear_PID':{'P':[290,290,5800],'I':[0.042,0.042,5],'D':[451,451,5500]},
+                            'Linear_PID':{'P':[300,300,6100],'I':[0.055,0.055,7],'D':[400,400,6500]},
                             'Linear_To_Angular_Scaler':[1,1,0],
                             'Yaw_Rate_Scaler':0.18,
                             'Angular_PID':{'P':[22000,22000,1500],'I':[0,0,1.2],'D':[12000,12000,0]},
@@ -78,15 +78,17 @@ class quadsim_P2P:
         use to start an iterative run
         
         """
-        if not self.planReady:
-            return
+        #if not self.planReady:
+        #    return
         
-        self.yaw = self.List_Natural_Yaw();
+        #self.yaw = self.List_Natural_Yaw();
         # Start the threads
         self.quad.start_thread(dt=QUAD_DYNAMICS_UPDATE,time_scaling=TIME_SCALING)
         self.ctrl.start_thread(update_rate=CONTROLLER_DYNAMICS_UPDATE,time_scaling=TIME_SCALING)
         self.iterRunGo = True
-        self.pathIter = 0
+        #self.pathIter = 0
+        
+        print("controller started")
         
     #HOMEBREW
     def iterRun_move(self):
@@ -99,6 +101,7 @@ class quadsim_P2P:
         """
         
         if not self.planReady or not self.iterRunGo:
+            print("cannot iterate")
             return None
         
         #calculate the constants for this iteration
@@ -117,7 +120,7 @@ class quadsim_P2P:
         #force full stop at the end goal
         elif self.pathIter == self.rrt.pathLen-1:
             if vel <= END_GOAL_VELOCITY and dist < MINIMAL_END_DISTANCE:
-                self.iterRun_stop()
+                self.iterRunGo = False
                 
         return pos, self.quad.get_orientation('q1')
         
@@ -131,6 +134,7 @@ class quadsim_P2P:
         self.ctrl.stop_thread()
         self.pathReady = False
         self.iterRunGo = False
+        print("controller stopped")
         
     #rearanged functionallity
     def autoRun(self):
@@ -217,6 +221,10 @@ class quadsim_P2P:
         
         self.path = path
         self.planReady = True
+        self.yaw = self.List_Natural_Yaw();
+        self.pathIter = 0
+        self.iterRunGo = True
+        
         return True
     
     #HOMEBREW

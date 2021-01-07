@@ -119,7 +119,7 @@ def convert_bbox(pos, size):
     
 def main():
     obst_count = 17
-    targetCount = 1
+    targetCount = 2
     startName='Start1'
     obstaclePrefix = 'column'
     targetPrefix = 'End'
@@ -142,10 +142,7 @@ def main():
     sim.simxStartSimulation(clientID, sim.simx_opmode_oneshot)
     # enable the synchronous mode on the client:
     sim.simxSynchronous(clientID,1);
-    
-    # start the simulation:
-    sim.simxStartSimulation(clientID,sim.simx_opmode_blocking);
-    
+       
     # enable streaming of a value:
     anyValue = sim.simxGetIntegerSignal(clientID,"anyValue",sim.simx_opmode_streaming)
     
@@ -179,9 +176,8 @@ def main():
     deliveries = []
     for i in range(targetCount):
         err, targ = sim.simxGetObjectHandle(
-            clientID, 'End1', sim.simx_opmode_blocking)
+            clientID, 'End'+str(i+1), sim.simx_opmode_blocking)
         tmp = flib.get_pos(clientID, targ)
-        print(targ)
         deliveries.append([tmp[0],tmp[1],tmp[2]])
     
     print(deliveries)
@@ -191,26 +187,31 @@ def main():
     #controller object
     pathControl = quadsim_P2P(pose, bbox_list)
     
-    if pathControl.plan(deliveries[-1]):
-        print("the path is worthy!")
-
-      
     pathControl.iterRun_start()
-    print(pathControl.path[0])
-    while pathControl.iterRunGo:
-        pos, ori = pathControl.iterRun_move()
-        #pathControl.display()
-        #print("pos = ",pathControl.iterRun_move())
-        
-        err = sim.simxSetObjectPosition(clientID, QuadricopterT, -1,
-                                         pathControl.path[pathControl.pathIter], sim.simx_opmode_blocking)
-        err = sim.simxSetObjectPosition(clientID, Quadricopter, -1,
-                                         pos, sim.simx_opmode_blocking)
-        err = sim.simxSetObjectOrientation(clientID, Quadricopter, -1, ori, sim.simx_opmode_blocking)
-        
-        sim.simxSynchronousTrigger(clientID)
-        sim.simxGetPingTime(clientID)
     
+    for target in deliveries:
+        if pathControl.plan(target):
+            print("the path is worthy!")
+        else:
+            break
+              
+        print(pathControl.path[0])
+        while pathControl.iterRunGo:
+            pos, ori = pathControl.iterRun_move()
+            #pathControl.display()
+            #print("pos = ",pathControl.iterRun_move())
+            
+            err = sim.simxSetObjectPosition(clientID, QuadricopterT, -1,
+                                             pathControl.path[pathControl.pathIter], sim.simx_opmode_blocking)
+            err = sim.simxSetObjectPosition(clientID, Quadricopter, -1,
+                                             pos, sim.simx_opmode_blocking)
+            err = sim.simxSetObjectOrientation(clientID, Quadricopter, -1, ori, sim.simx_opmode_blocking)
+            
+            sim.simxSynchronousTrigger(clientID)
+            #sim.simxGetPingTime(clientID)
+    
+    pathControl.iterRun_stop()
+    sim.simxStopSimulation(clientID, sim.simx_opmode_blocking)
     sim.simxFinish(clientID)
 
 if __name__ == '__main__':
