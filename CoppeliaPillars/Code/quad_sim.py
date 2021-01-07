@@ -11,7 +11,7 @@ TIME_SCALING = 1.0 # Any positive number(Smaller is faster). 1.0->Real Time, 0.0
 QUAD_DYNAMICS_UPDATE = 0.002 # seconds
 CONTROLLER_DYNAMICS_UPDATE = 0.002 # seconds
 NEXT_GOAL_DISTANCE = 1      #distance from current potion to path node neccesary to move to the next path node
-MINIMAL_END_DISTANCE = 0.5  #distance from end goal that indicated succesfull reach
+MINIMAL_END_DISTANCE = 0.1  #distance from end goal that indicated succesfull reach
 END_GOAL_VELOCITY = 0.01    #velocity at the end goal the indicates succesfull reach
 
 #moved functionality
@@ -58,7 +58,8 @@ class quadsim_P2P:
                             'Yaw_Control_Limits':[-900,900],
                             'Z_XY_offset':500,
                             #'Linear_PID':{'P':[1,1,23.33]*300,'I':[0.01,0.01,1.112]*4,'D':[3,3,33]*150},
-                            'Linear_PID':{'P':[290,290,6000],'I':[0.042,0.042,5],'D':[410,410,5000]},
+                            #'Linear_PID':{'P':[290,290,6000],'I':[0.042,0.042,5],'D':[410,410,5000]},
+                            'Linear_PID':{'P':[290,290,6000],'I':[0.042,0.042,5],'D':[451,451,5500]},
                             'Linear_To_Angular_Scaler':[1,1,0],
                             'Yaw_Rate_Scaler':0.18,
                             'Angular_PID':{'P':[22000,22000,1500],'I':[0,0,1.2],'D':[12000,12000,0]},
