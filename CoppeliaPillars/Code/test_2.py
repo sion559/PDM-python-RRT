@@ -169,19 +169,11 @@ def main():
             clientID, 'End1', sim.simx_opmode_blocking)
         tmp = flib.get_pos(clientID, targ)
         print(targ)
-        deliveries.append([tmp[0]+1,tmp[1],tmp[2]])
+        deliveries.append([tmp[0],tmp[1],tmp[2]])
     
     print(deliveries)
         
-    #err, targ = sim.simxGetObjectHandle(clientID, startName, sim.simx_opmode_blocking)
-    #start = flib.get_pos(clientID, targ)
-    #err = sim.simxSetObjectPosition(clientID, QuadricopterT, -1,
-    #                                     (start[0], start[1], start[2]), sim.simx_opmode_blocking)
-    #err = sim.simxSetObjectPosition(clientID, Quadricopter, -1,
-    #                                     (start[0], start[1], start[2]), sim.simx_opmode_blocking)
-    
     pose = flib.get_pos(clientID, QuadricopterT)
-    rot = flib.get_rot(clientID, QuadricopterT)
     
     #controller object
     pathControl = quadsim_P2P(pose, bbox_list)
@@ -197,11 +189,11 @@ def main():
         #pathControl.display()
         #print("pos = ",pathControl.iterRun_move())
         
-        #err = sim.simxSetObjectPosition(clientID, QuadricopterT, -1,
-        #                                 pathControl.path[pathControl.pathIter], sim.simx_opmode_blocking)
         err = sim.simxSetObjectPosition(clientID, QuadricopterT, -1,
+                                         pathControl.path[pathControl.pathIter], sim.simx_opmode_blocking)
+        err = sim.simxSetObjectPosition(clientID, Quadricopter, -1,
                                          pos, sim.simx_opmode_blocking)
-        err = sim.simxSetObjectOrientation(clientID, QuadricopterT, -1, ori, sim.simx_opmode_blocking)
+        err = sim.simxSetObjectOrientation(clientID, Quadricopter, -1, ori, sim.simx_opmode_blocking)
     
     sim.simxFinish(clientID)
 
