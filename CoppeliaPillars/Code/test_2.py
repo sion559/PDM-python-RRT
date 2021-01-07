@@ -16,6 +16,12 @@ r_field = 10.
 
 drone_pose = []
 
+class Obstacle:
+
+    def __init__(self, pose, size):
+        self.pose = pose
+        self.size = size
+
 def rep_force(dist_to_obs):
     # type of 1/х
     return c_rep / dist_to_obs - c_rep / r_field
@@ -29,7 +35,8 @@ def get_near_obst(current_pose, obst_array):
     near_dist = None
     near_pose = None
 
-    for pose in obst_array:
+    for obst in obst_array:
+        pose = obst.pose
         dist = np.linalg.norm([current_pose[0] - pose[0], current_pose[1] - pose[1]])
         if near_dist is None or dist < near_dist:
             near_dist = dist
@@ -56,19 +63,29 @@ if __name__=="__main__":
 
     sim.simxStartSimulation(clientID, sim.simx_opmode_blocking)
 
-    obst_count = 14
+    obst_count = 17
     obst_list = []
 
     #obstacles list
     for i in range(obst_count):
-        string = 'column'+str(i)
-        err, Obst = sim.simxGetObjectHandle(clientID, string, sim.simx_opmode_blocking)
+        #string = 'column'+str(i)
+        #err, Obst = sim.simxGetObjectHandle(clientID, string, sim.simx_opmode_blocking)
+        #obst_pose = flib.get_pos(clientID, Obst)
+        #print(string, "=", obst_pose)
+        #obst_list.append(obst_pose)
+        err, Obst = sim.simxGetObjectHandle(
+            clientID, 'column'+str(i), sim.simx_opmode_blocking)
+        if err < 1:
+            print("could not retrieve column ", i)
         obst_pose = flib.get_pos(clientID, Obst)
-        print(string, "=", obst_pose)
-        obst_list.append(obst_pose)
+        print("coll ", i, "POSE: ", obst_pose)
+        obst_size = flib.get_size(clientID, Obst)
+        print("coll ", i, "SIZE: ", obst_size)
+        obst = Obstacle(obst_pose, obst_size)
+        obst_list.append(obst)
 
 
-    print("is conneted!!!")
+    print("is connected!!!")
     pose = flib.get_pos(clientID, QuadricopterT)
     rot = flib.get_rot(clientID, QuadricopterT)
 
