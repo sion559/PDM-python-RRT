@@ -18,9 +18,10 @@ drone_pose = []
 
 class Obstacle:
 
-    def __init__(self, pose, size):
+    def __init__(self, pose, size, bbox):
         self.pose = pose
         self.size = size
+        self.bbox = bbox
 
 def rep_force(dist_to_obs):
     # type of 1/х
@@ -45,6 +46,20 @@ def get_near_obst(current_pose, obst_array):
 
     return near_pose, dist
 
+def convert_bbox(pos, size):
+    #by default it gives the opposite corners of the bbox.
+    # by substracting the starting point, it is defined as 
+    # (px, py, pz, dx, dy, dz) with d.. the length of the box on that axis. (only axis aligned bboxes are currently allowed)
+    new_size = np.empty(6)
+    new_size[0] = pos[0] - size[3]
+    new_size[1] = pos[1] - size[4]
+    new_size[2] = pos[2] - size[5] 
+    new_size[3] = size[3] - size[1]
+    new_size[4] = size[4] - size[2]
+    new_size[5] = size[5] - size[3]
+
+    return new_size
+
 
 if __name__=="__main__":
     sim.simxFinish(-1)
@@ -65,7 +80,7 @@ if __name__=="__main__":
 
     obst_count = 17
     obst_list = []
-
+    bbox_list = []
     #obstacles list
     for i in range(obst_count):
         #string = 'column'+str(i)
@@ -73,15 +88,19 @@ if __name__=="__main__":
         #obst_pose = flib.get_pos(clientID, Obst)
         #print(string, "=", obst_pose)
         #obst_list.append(obst_pose)
+
         err, Obst = sim.simxGetObjectHandle(
             clientID, 'column'+str(i), sim.simx_opmode_blocking)
-        if err < 1:
+        if err > 0:
             print("could not retrieve column ", i)
         obst_pose = flib.get_pos(clientID, Obst)
-        print("coll ", i, "POSE: ", obst_pose)
+        print("col ", i, "POSE: ", obst_pose)
         obst_size = flib.get_size(clientID, Obst)
-        print("coll ", i, "SIZE: ", obst_size)
-        obst = Obstacle(obst_pose, obst_size)
+        print("col ", i, "SIZE: ", obst_size)
+        obst_bbox = convert_bbox(obst_pose, obst_size)
+        print("col ", i, "BBOX: ", obst_bbox)
+        obst = Obstacle(obst_pose, obst_size, obst_bbox)
+        bbox_list.append(obst_bbox)
         obst_list.append(obst)
 
 

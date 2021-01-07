@@ -102,7 +102,7 @@ def get_size(clientID, obstacle):
     err, size[0] = vrep.simxGetObjectFloatParameter (clientID, obstacle, vrep.sim_objfloatparam_objbbox_min_x, vrep.simx_opmode_oneshot_wait)
     err, size[1] = vrep.simxGetObjectFloatParameter (clientID, obstacle, vrep.sim_objfloatparam_objbbox_min_y, vrep.simx_opmode_oneshot_wait)
     err, size[2] = vrep.simxGetObjectFloatParameter (clientID, obstacle, vrep.sim_objfloatparam_objbbox_min_z, vrep.simx_opmode_oneshot_wait)
-    err, size[3] = vrep.simxGetObjectFloatParameter (clientID, obstacle, vrep.sim_objfloatparam_objbbox_max_x, vrep.simx_opmode_oneshot_wait)
+    err, size[3] = vrep.simxGetObjectFloatParameter (clientID, obstacle, vrep.sim_objfloatparam_objbbox_max_x, vrep.simx_opmode_oneshot_wait) 
     err, size[4] = vrep.simxGetObjectFloatParameter (clientID, obstacle, vrep.sim_objfloatparam_objbbox_max_y, vrep.simx_opmode_oneshot_wait)
     err, size[5] = vrep.simxGetObjectFloatParameter (clientID, obstacle, vrep.sim_objfloatparam_objbbox_max_z, vrep.simx_opmode_oneshot_wait)
     
