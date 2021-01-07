@@ -36,10 +36,7 @@ class RRT:
 
     #editted for 3d
     def __init__(self,
-                 start,
-                 goal,
                  obstacle_list,
-                 search_zone=1.1,
                  expand_dis=3.0,
                  path_resolution=0.5,
                  goal_sample_rate=5,
@@ -53,26 +50,15 @@ class RRT:
         randArea:Random Sampling Area [min,max]
 
         """
-        self.start = self.Node(start[0], start[1], start[2])
-        self.end = self.Node(goal[0], goal[1],  goal[2])
         
-        self.goalDist, goalTheta, goalPhi = self.calc_distance_and_angle(self.start,self.end)
-        self.goalDir = np.array([(goal[0]-start[0])/self.goalDist, (goal[1]-start[1])/self.goalDist, (goal[2]-start[2])/self.goalDist])
-        self.searchTheta = 3.14/2
-        self.R = np.array([[math.cos(goalTheta)*math.cos(goalPhi), -math.sin(goalTheta), math.cos(goalTheta)*math.sin(goalPhi)],
-                         [math.sin(goalTheta)*math.cos(goalPhi), math.cos(goalTheta), math.sin(goalTheta)*math.sin(goalPhi)],
-                         [-math.sin(goalPhi), 0, -math.sin(goalPhi)]])
-        
-        
-        #self.max = self.Node(self.end.x*search_zone, self.end.y*search_zone, self.end.z*search_zone)
-        #self.min = self.Node(self.start.x*search_zone, self.start.y*search_zone, self.start.z*search_zone)
         self.expand_dis = expand_dis
         self.path_resolution = path_resolution
         self.goal_sample_rate = goal_sample_rate
         self.max_iter = max_iter
         self.obstacle_list = obstacle_list
         self.node_list = []
-
+        self.imposible = False
+        
     #editted for 3d
     def planning(self, animation=False, collision=True):
         """
@@ -80,7 +66,10 @@ class RRT:
 
         animation: flag for animation on or off
         """
-
+        
+        if(self.imposible == True):
+            return None
+        
         self.node_list = [self.start]
         for i in range(self.max_iter):
             rnd_node = self.get_random_node()
@@ -172,18 +161,12 @@ class RRT:
             
         #TODO generate in a cone
         L = random.uniform(0, self.goalDist)
-        r = random.uniform(-L*math.sin(self.searchTheta/2), L*math.sin(self.searchTheta/2))
+        r = random.uniform(0, L*self.constSinTheta)
         p = random.uniform(0, 6.28)     #angle aroung goalDir
         cone_center = self.goalDir*L
-        #print("L=", L, " at=", self.goalDir)
-        rNode = np.matmul(self.R,np.array([r*math.cos(p), r*math.sin(p), 0])) + cone_center
-        print(rNode)
+        rNode = np.matmul(self.R,np.array([0, r*math.cos(p), r*math.sin(p)])) + cone_center
         rnd = self.Node(rNode[0], rNode[1], rNode[2])      
-                
-        #rnd = self.Node(
-        #    random.uniform(self.min.x, self.max.x),
-        #    random.uniform(self.min.y, self.max.y),
-        #    random.uniform(self.min.z, self.max.z))
+        
         return rnd
 
     def draw_graph(self, rnd=None):
@@ -232,20 +215,16 @@ class RRT:
             print("Geen nits")
             return False
 
-        #calculate the distance between obstacle center and node
+        #calculate the distance between obstacle edges and node
         for (ox, oy, oz, dx, dy, dz) in obstacleList:
-            dx_list = [ox - x for x in node.path_x]
-            dy_list = [oy - y for y in node.path_y]
-            dz_list = [oz - z for z in node.path_z]
+            dx_list = [x - ox for x in node.path_x]
+            dy_list = [y - oy for y in node.path_y]
+            dz_list = [z - oz for z in node.path_z]
             
-            for x,y,z in zip(dx_list, dy_list, dz_list):
-                if x <= dx and y <= dy and z <= dz:
+            for ex,ey,ez in zip(dx_list, dy_list, dz_list):
+                if ex >= 0 and ex <= dx and ey >= 0 and ey <= dy and ez >= 0 and ez <= dz:
                     return False
                 
-            #d_list = [dx**2 + dy**2 + dz**2 for (dx, dy, dz) in zip(dx_list, dy_list, dz_list)]
-            #for d in d_list:
-            #    if d <= size:
-            #        return False
         return True  # safe
 
     #editted for 3d

@@ -7,6 +7,7 @@ author: Atsushi Sakai(@Atsushi_twi)
 """
 
 import math
+import numpy as np
 #sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../RRT/")
 
 try:
@@ -28,10 +29,8 @@ class RRTStar(RRT):
             self.cost = 0.0
 
     def __init__(self,
-                 start,
-                 goal,
                  obstacle_list,
-                 search_zone=1.1,
+                 searchTheta=3.14/3,
                  expand_dis=30.0,
                  path_resolution=1.0,
                  goal_sample_rate=20,
@@ -47,20 +46,42 @@ class RRTStar(RRT):
         randArea:Random Sampling Area [min,max]
 
         """
-        super().__init__(start, goal, obstacle_list, search_zone, expand_dis,
+        super().__init__(obstacle_list, expand_dis,
                          path_resolution, goal_sample_rate, max_iter)
         self.connect_circle_dist = connect_circle_dist
-        self.goal_node = self.Node(goal[0], goal[1], goal[2])
         self.search_until_max_iter = search_until_max_iter
+        self.searchTheta = searchTheta
 
     #edit for 3d
-    def planning(self):
+    def planning(self,start, goal):
         """
         rrt star path planning
 
         animation: flag for animation on or off .
         """
-
+                
+        self.start = self.Node(start[0], start[1], start[2])
+        self.end = self.Node(goal[0], goal[1],  goal[2])
+        self.goal_node = self.Node(goal[0], goal[1], goal[2])
+        #setup for conical search
+        self.goalDist, goalTheta, goalPhi = self.calc_distance_and_angle(self.start,self.end)
+        self.goalDist *= 1.1
+        self.goalDir = np.array([(goal[0]-start[0])/self.goalDist, (goal[1]-start[1])/self.goalDist, (goal[2]-start[2])/self.goalDist])
+        self.R = np.array([[math.cos(goalTheta)*math.cos(goalPhi), -math.sin(goalTheta), math.cos(goalTheta)*math.sin(goalPhi)],
+                         [math.sin(goalTheta)*math.cos(goalPhi), math.cos(goalTheta), math.sin(goalTheta)*math.sin(goalPhi)],
+                         [-math.sin(goalPhi), 0, -math.sin(goalPhi)]])
+        self.R = np.linalg.inv(self.R)
+        self.constSinTheta = math.sin(goalTheta/2)
+        
+        
+        for (ox, oy, oz, dx, dy, dz) in self.obstacle_list:
+            ex = goal[0]-ox
+            ey = goal[1]-oy
+            ez = goal[2]-oz                  
+            if ex >= 0 and ex <= dx and ey >= 0 and ey <= dy and ez >= 0 and ez <= dz:
+                print("Goal is in a box")
+                return None
+        
         self.node_list = [self.start]
         for i in range(self.max_iter):
             print("Iter:", i, ", number of nodes:", len(self.node_list))

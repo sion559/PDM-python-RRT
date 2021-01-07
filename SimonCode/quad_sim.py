@@ -8,7 +8,7 @@ from rrt_star import RRTStar
 #https://github.com/abhijitmajumdar/Quadcopter_simulator
 
 # Constants
-TIME_SCALING = 1.0 # Any positive number(Smaller is faster). 1.0->Real Time, 0.0->Run as fast as possible
+TIME_SCALING = 5.0 # Any positive number(Smaller is faster). 1.0->Real Time, 0.0->Run as fast as possible
 QUAD_DYNAMICS_UPDATE = 0.002 # seconds
 CONTROLLER_DYNAMICS_UPDATE = 0.005 # seconds
 run = True
@@ -18,7 +18,6 @@ class quadsim_P2P:
     def __init__(self, start, obstacles):
         self.start = start
         self.obs = obstacles
-        self.rrtIter = 1000
         
         self.QUADCOPTER={'q1':{'position':start,'orientation':[0,0,0],'L':0.175,'r':0.0665,'prop_size':[8,3.8],'weight':0.5, 'motorWeight':0.035}}
         # Controller parameters
@@ -40,7 +39,7 @@ class quadsim_P2P:
         self.gui_object = gui.GUI(quads=self.QUADCOPTER, obs=obstacles)
         self.display()
         self.ctrl = controller.Controller_PID_Point2Point(self.quad.get_state,self.quad.get_time,self.quad.set_motor_speeds,params=self.CONTROLLER_PARAMETERS,quad_identifier='q1')
-                
+        self.rrt = RRTStar(obstacle_list=self.obs, max_iter=1000, expand_dis=3.0, path_resolution=0.3)        
         
     def run(self):
         yaw = self.List_Natural_Yaw();
@@ -79,10 +78,10 @@ class quadsim_P2P:
         
     def plan(self, goal):
         begin = self.quad.get_position('q1')
-        rrt = RRTStar(start=begin, goal=goal, obstacle_list=self.obs, max_iter=self.rrtIter, expand_dis=3.0, path_resolution=0.3)
-        path = rrt.planning()
+        path = self.rrt.planning(begin, goal)
         if(path == None):
-            #self.rrtIter += 500
+            self.rrt.search_zone *= 1.1
+            self.rrt.maxiter += 200
             return False
         
         path.reverse()
