@@ -2,7 +2,9 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as Axes3D
+import mpl_toolkits.mplot3d as mp3d
 import sys
+
 
 #ORIGINAL
 class GUI():
