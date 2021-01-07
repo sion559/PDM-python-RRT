@@ -200,8 +200,9 @@ class RRT:
         p = random.uniform(0, 6.28)     #angle aroung goalDir
         cone_center = self.goalDir*L
         rNode = np.matmul(self.R,np.array([0, r*math.cos(p), r*math.sin(p)])) + cone_center
-        rnd = self.Node(rNode[0], rNode[1], rNode[2])      
+        rnd = self.Node(rNode[0] + self.start.x, rNode[1] + self.start.y, rNode[2] + self.start.z)      
         
+        #print(rNode)
         return rnd
     
     #ORIGINAL
