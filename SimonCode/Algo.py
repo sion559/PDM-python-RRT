@@ -5,41 +5,36 @@ Created on Thu Dec  29 14:20:08 2021
 @author: Simon van Gemert
 """
 
-import math
-from rrt_star import RRTStar
-from quad_sim import Single_Point2Point
 from quad_sim import quadsim_P2P
 
-show_animation = False
-
-#list of spherical obstacles
+#list of cubical obstacles, with equal length and position a origen
 obstacleList = [
-        (5, 5, 5, 1),
-        (-3, 6, 3, 1),
-        (4, -6, 6, 1),
-        (-7, 4, 7, 1)]  # [x,y,z,size]
+        (3.5, 3.5, 3.5, 1, 2, 2),
+        (-3, 6, 4, 1, 2, 1),
+        (4, -6, 6, 2, 1, 2),
+        (-7, 4, 7, 1, 3, 1),
+        (7, 1, 5, 2, 1.5, 1),
+        (1, 1, 0, 5, 4, 1)]  # [x,y,z,dx, dy, dz]
 
 #start pos
 begin = [0,0,0]
+
 #end pos
-end = [12,5,1]
+end = [8,3,7]
 
-for i in range(10):
-    rrt = RRTStar(start=begin, goal=end, obstacle_list=obstacleList, max_iter=500, expand_dis=3.0, path_resolution=0.5)
-    path = rrt.planning()
-       
-    if(path != None):
-        break
+#initiate simulator
+sims = quadsim_P2P(begin, obstacleList)
 
-#way.reverse()
-print(path)
-yaw = []
-for Y in range(len(path)-1):
-    dx = path[Y+1][0] - path[Y][0]
-    dy = path[Y+1][1] - path[Y][1]
-    yaw.append(math.atan2(dy,dx))
-yaw.append(0)
-
-sims = quadsim_P2P(begin)
-sims.run(path)
-#Single_Point2Point(begin, path, yaw)
+#plan a path from the current position to the goal
+while(not sims.plan(end)):
+    None
+    
+    
+sims.iterRun_start()
+while sims.iterRunGo:
+    print("pos = ",sims.iterRun_move())
+    sims.display()
+    
+    
+#move to the position
+#sims.autorun()

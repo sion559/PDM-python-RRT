@@ -28,10 +28,8 @@ class RRTStar(RRT):
             self.cost = 0.0
 
     def __init__(self,
-                 start,
-                 goal,
                  obstacle_list,
-                 search_zone=1.1,
+                 searchTheta=3.14/3,
                  expand_dis=30.0,
                  path_resolution=1.0,
                  goal_sample_rate=20,
@@ -43,24 +41,34 @@ class RRTStar(RRT):
 
         start:Start Position [x,y,z]
         goal:Goal Position [x,y,z]
-        obstacleList:obstacle Positions [[x,y,z,size],...]
-        randArea:Random Sampling Area [min,max]
+        obstacleList:obstacle Positions [[pos_x, pos_y, pos_z, len_x, len_y, len_z],...]
+        searchTheta: angles for conical search area
+        max_iter: maximum nuber of iteration in which to find the path
+        connect_circle_dist: circle radius in which optimize node connections
 
         """
-        super().__init__(start, goal, obstacle_list, search_zone, expand_dis,
+        super().__init__(obstacle_list, expand_dis,
                          path_resolution, goal_sample_rate, max_iter)
         self.connect_circle_dist = connect_circle_dist
-        self.goal_node = self.Node(goal[0], goal[1], goal[2])
         self.search_until_max_iter = search_until_max_iter
+        self.searchTheta = searchTheta
+        self.pathLen = 0
 
     #edit for 3d
     def planning(self):
         """
-        rrt star path planning
-
-        animation: flag for animation on or off .
+        planning
+        plan a path between the start and goal nodes.
+        prePlan(start, goal) needs to be called first of this function will fail
+        
+        Returns 'None' if no path can be found
+        Returns path when a valid path is found
+        
         """
-
+        
+        if(self.imposible == True):
+            return None        
+        
         self.node_list = [self.start]
         for i in range(self.max_iter):
             print("Iter:", i, ", number of nodes:", len(self.node_list))
@@ -92,7 +100,10 @@ class RRTStar(RRT):
             if ((not self.search_until_max_iter) and new_node):  # if reaches goal
                 last_index = self.search_best_goal_node()
                 if last_index is not None:
-                    return self.generate_final_course(last_index)
+                    tmp = self.generate_final_course(last_index)
+                    tmp.reverse()
+                    self.pathLen = len(tmp)
+                    return tmp
 
         print("reached max iteration")
 
@@ -102,6 +113,7 @@ class RRTStar(RRT):
 
         return None
 
+    #ORIGINAL
     def choose_parent(self, new_node, near_inds):
         """
         Computes the cheapest point to new_node contained in the list
@@ -239,6 +251,7 @@ class RRTStar(RRT):
         d, _, _ = self.calc_distance_and_angle(from_node, to_node)
         return from_node.cost + d
 
+    #ORIGINAL
     def propagate_cost_to_leaves(self, parent_node):
 
         for node in self.node_list:
