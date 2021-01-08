@@ -8,6 +8,7 @@ author: Atsushi Sakai(@Atsushi_twi)
 
 import math
 import sim
+import numpy as np
 #sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../RRT/")
 
 try:
@@ -68,6 +69,7 @@ class RRTStar(RRT):
         err, dodo = sim.simxGetObjectHandle(
             clientID, 'dodo', sim.simx_opmode_blocking)
 
+        
         if(self.imposible == True):
             return None        
         
@@ -76,7 +78,11 @@ class RRTStar(RRT):
             
             #generate random node
             rnd = self.get_random_node(i)
-            
+            sim.simxSetObjectPosition(clientID, dodo, -1, [rnd.x, rnd.y, rnd.z] 
+                , sim.simx_opmode_streaming)
+            # sim.simxSetObjectPosition(clientID, dodo, -1, [self.start.x, self.start.y, self.start.z] 
+            #     + np.dot(self.R.T, np.array([1, 0, 0]) * self.calc_dist_to_goal(rnd.x, rnd.y, rnd.z)), sim.simx_opmode_streaming)
+
             #find nearest node
             nearest_ind = self.get_nearest_node_index(self.node_list, rnd)
             
@@ -96,7 +102,7 @@ class RRTStar(RRT):
                     self.node_list.append(node_with_updated_parent)
                 else:
                     self.node_list.append(new_node)
-                sim.simxSetObjectPosition(clientID, dodo, -1, [new_node.x,new_node.y,new_node.z], sim.simx_opmode_streaming)
+               
             #check for the goal
             if ((not self.search_until_max_iter) and new_node):  # if reaches goal
                 last_index = self.search_best_goal_node()

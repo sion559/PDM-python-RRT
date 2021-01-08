@@ -81,9 +81,13 @@ class RRT:
         cp = math.cos(goalPhi)
         st = math.sin(goalTheta)
         sp = math.sin(goalPhi)
-        R_x = np.array([[1,0,0],[0,ct,-st],[0,st,ct]])
-        R_y = np.array([[cp,0,sp],[0,1,0],[-sp,0,cp]])
-        self.R = np.dot( R_y, R_x )
+        R_z = np.array([[ct,st,0], #WRONG ROTATION MATRIX, just for magical fixes
+                        [-st, ct,0],
+                        [0,  0, 1]])
+        R_y = np.array([[cp,0,sp],
+                        [0, 1,0],
+                        [-sp,0,cp]])
+        self.R = np.dot( R_y, R_z )
         
         #self.R = np.array([[math.cos(goalTheta)*math.cos(goalPhi), -math.sin(goalTheta), math.cos(goalTheta)*math.sin(goalPhi)],
         #                 [math.sin(goalTheta)*math.cos(goalPhi), math.cos(goalTheta), math.sin(goalTheta)*math.sin(goalPhi)],
@@ -218,7 +222,8 @@ class RRT:
         r = random.uniform(0, L*self.constSinTheta)
         p = random.uniform(0, 6.28)     #angle aroung goalDir
         #cone_center = self.goalDir*L
-        rNode = np.dot(self.R, np.array([L, r*math.cos(p), r*math.sin(p)]))
+        rNode = np.dot(self.R.T, np.array([L, r*math.cos(p), r*math.sin(p)]))
+
         #print(rNode)
         rnd = self.Node(rNode[0] + self.start.x, rNode[1] + self.start.y, rNode[2] + self.start.z)      
         
