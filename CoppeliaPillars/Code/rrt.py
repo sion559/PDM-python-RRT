@@ -54,6 +54,7 @@ class RRT:
         self.expand_dis = expand_dis
         self.path_resolution = path_resolution
         self.goal_sample_rate = goal_sample_rate
+        self.goal_sample = 0
         self.max_iter = max_iter
         self.obstacle_list = obstacle_list
         self.node_list = []
@@ -75,11 +76,18 @@ class RRT:
         self.goalDist, goalTheta, goalPhi = self.calc_distance_and_angle(self.start,self.end)
         self.goalDist *= 1.1
         self.goalDir = np.array([(goal[0]-start[0])/self.goalDist, (goal[1]-start[1])/self.goalDist, (goal[2]-start[2])/self.goalDist])
-        self.R = np.array([[math.cos(goalTheta)*math.cos(goalPhi), -math.sin(goalTheta), math.cos(goalTheta)*math.sin(goalPhi)],
-                         [math.sin(goalTheta)*math.cos(goalPhi), math.cos(goalTheta), math.sin(goalTheta)*math.sin(goalPhi)],
-                         [-math.sin(goalPhi), 0, -math.sin(goalPhi)]])
-        self.R = np.linalg.inv(self.R)
-        self.constSinTheta = math.sin(goalTheta/2)
+        ct = math.cos(goalTheta)
+        cp = math.cos(goalPhi)
+        st = math.sin(goalTheta)
+        sp = math.sin(goalPhi)
+        R_x = np.array([[1,0,0],[0,ct,-st],[0,st,ct]])
+        R_y = np.array([[cp,0,sp],[0,1,0],[-sp,0,cp]])
+        self.R = np.dot( R_y, R_x )
+        
+        #self.R = np.array([[math.cos(goalTheta)*math.cos(goalPhi), -math.sin(goalTheta), math.cos(goalTheta)*math.sin(goalPhi)],
+        #                 [math.sin(goalTheta)*math.cos(goalPhi), math.cos(goalTheta), math.sin(goalTheta)*math.sin(goalPhi)],
+        #                 [-math.sin(goalPhi), 0, -math.sin(goalPhi)]])
+        self.constSinTheta = math.cos(goalTheta/2)
         
         for (ox, oy, oz, dx, dy, dz) in self.obstacle_list:
             ex = goal[0]-ox
@@ -189,17 +197,24 @@ class RRT:
     def get_random_node(self):
         """
         get_random_node
-        generate a random node from a conical field
+        generate a random node from a conical field. 
         
-        Returns random node
+        Returns random node or 'end' once every goal_sample_rate calls
         """
+        
+        if self.goal_sample == 0:
+            self.goal_sample = self.goal_sample_rate
+            return self.end
+        else:
+            self.goal_sample -= 1
             
         #TODO generate in a cone
         L = random.uniform(0, self.goalDist)
         r = random.uniform(0, L*self.constSinTheta)
         p = random.uniform(0, 6.28)     #angle aroung goalDir
-        cone_center = self.goalDir*L
-        rNode = np.matmul(self.R,np.array([0, r*math.cos(p), r*math.sin(p)])) + cone_center
+        #cone_center = self.goalDir*L
+        rNode = np.dot(self.R.T,np.array([L, r*math.cos(p), r*math.sin(p)]))
+        #print(rNode)
         rnd = self.Node(rNode[0] + self.start.x, rNode[1] + self.start.y, rNode[2] + self.start.z)      
         
         #print(rNode)

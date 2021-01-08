@@ -75,13 +75,16 @@ class Controller_PID_Point2Point():
     def update_yaw_target(self,target):
         self.yaw_target = self.wrap_angle(target)
 
-    def thread_run(self,update_rate,time_scaling):
-        update_rate = update_rate*time_scaling
+    def thread_run(self,dt,time_scaling):
+        #EDIT 10**3 was 1, dt wat update_rate
+        update_rate = 10**6 * dt * time_scaling
+        #update_rate = dt*time_scaling
         last_update = self.get_time()
         while(self.run==True):
             time.sleep(0)
             self.time = self.get_time()
-            if (self.time - last_update).total_seconds() > update_rate:
+            #EDIT >= was >, microseconds was total_seconds
+            if (self.time - last_update).microseconds >= update_rate:
                 self.update()
                 last_update = self.time
 

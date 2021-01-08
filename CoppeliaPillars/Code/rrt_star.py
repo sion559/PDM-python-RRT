@@ -29,10 +29,10 @@ class RRTStar(RRT):
 
     def __init__(self,
                  obstacle_list,
-                 searchTheta=3.14/3,
-                 expand_dis=30.0,
-                 path_resolution=0.3,
-                 goal_sample_rate=20,
+                 searchTheta=3.14/4,
+                 expand_dis=50.0,
+                 path_resolution=0.05,
+                 goal_sample_rate=4,
                  max_iter=300,
                  connect_circle_dist=50.0,
                  search_until_max_iter=False):
@@ -52,7 +52,6 @@ class RRTStar(RRT):
         self.connect_circle_dist = connect_circle_dist
         self.search_until_max_iter = search_until_max_iter
         self.searchTheta = searchTheta
-        self.pathLen = 0
 
     #edit for 3d
     def planning(self):
@@ -71,7 +70,6 @@ class RRTStar(RRT):
         
         self.node_list = [self.start]
         for i in range(self.max_iter):
-            print("Iter:", i, ", number of nodes:", len(self.node_list))
             
             #generate random node
             rnd = self.get_random_node()
@@ -102,10 +100,10 @@ class RRTStar(RRT):
                 if last_index is not None:
                     tmp = self.generate_final_course(last_index)
                     tmp.reverse()
-                    self.pathLen = len(tmp)
+                    print("Iter:", i, ", number of nodes:", len(self.node_list))
                     return tmp
 
-        print("reached max iteration")
+        print("Max iteration, number of nodes:", len(self.node_list))
 
         last_index = self.search_best_goal_node()
         if last_index is not None:

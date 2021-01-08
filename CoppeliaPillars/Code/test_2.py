@@ -5,6 +5,7 @@ import time
 from geometry_tools import *
 from quad_sim import quadsim_P2P
 import time
+import sys
 import datetime
 
 rad = math.radians
@@ -65,7 +66,7 @@ def convert_bbox(pos, size):
    
 def main():
     obst_count = 17
-    targetCount = 2
+    targetCount = 4
     startName='Start1'
     obstaclePrefix = 'column'
     targetPrefix = 'End'
@@ -85,11 +86,8 @@ def main():
     if err == -1:
         print("No Quadricopter")
 
-    sim.simxStartSimulation(clientID, sim.simx_opmode_oneshot)
     #sim.simxStartSimulation(clientID, sim.simx_opmode_blocking)
-    # enable the synchronous mode on the client:
-    sim.simxSynchronous(clientID,1);
-      
+    # enable the synchronous mode on the client:     
     
     print("is connected!!!")
     
@@ -128,31 +126,61 @@ def main():
     #controller object
     pathControl = quadsim_P2P(pose, bbox_list)
     
-    pathControl.iterRun_start()
-    
-    now = datetime.datetime.now()
+    #plan route
+    while not pathControl.plan(deliveries):
+        print("Retrying planning with: max iterations=", pathControl.rrt.max_iter, ", search cone angle[Rad]=", pathControl.rrt.searchTheta)
+        
+    print("the path is worthy!")
+             
     lastIter = -1
-    for target in deliveries:
-        if pathControl.plan(target):
-            print("the path is worthy!")
-        else:
-            break
-              
-        print(pathControl.path[0])
-        while pathControl.iterRunGo:
-            pos, ori = pathControl.iterRun_move()
-            #pathControl.display()
+    
+    #start simulation
+    pathControl.iterRun_start() 
+    sim.simxStartSimulation(clientID, sim.simx_opmode_oneshot)
+    sim.simxSynchronous(clientID,1)
+    lastTime = datetime.datetime.now();
+    now = datetime.datetime.now()
+    
+    while pathControl.iterRunGo:
+        
+        pos, ori = pathControl.iterRun_move()
+        #pathControl.display()
             
-            sim.simxSetObjectPosition(clientID, Quadricopter, -1,
+        sim.simxSetObjectPosition(clientID, Quadricopter, -1,
                                              pos, sim.simx_opmode_streaming)
-            sim.simxSetObjectOrientation(clientID, Quadricopter, -1, ori, sim.simx_opmode_streaming)            
+        sim.simxSetObjectOrientation(clientID, Quadricopter, -1, ori, sim.simx_opmode_streaming)            
             
-            lastTime = now
+        
+        if(pathControl.pathIter != lastIter):
+            sim.simxSetObjectPosition(clientID, QuadricopterT, -1, pathControl.path[pathControl.goalIter][pathControl.pathIter], sim.simx_opmode_streaming)
             now = datetime.datetime.now()
-            if(pathControl.pathIter != lastIter):
-                sim.simxSetObjectPosition(clientID, QuadricopterT, -1, pathControl.path[pathControl.pathIter], sim.simx_opmode_streaming)
-                print("Loop time: ", (lastTime-now).microseconds, "[us]")
-                lastIter = pathControl.pathIter
+            print("Time between goals: ", (now-lastTime).total_seconds(), "[s]")
+            lastIter = pathControl.pathIter
+            lastTime = now
+            
+    
+    
+    # for target in deliveries:
+    #     if pathControl.plan(target):
+    #         print("the path is worthy!")
+    #     else:
+    #         break
+              
+    #     print(pathControl.path[0])
+    #     while pathControl.iterRunGo:
+    #         pos, ori = pathControl.iterRun_move()
+    #         #pathControl.display()
+            
+    #         sim.simxSetObjectPosition(clientID, Quadricopter, -1,
+    #                                          pos, sim.simx_opmode_streaming)
+    #         sim.simxSetObjectOrientation(clientID, Quadricopter, -1, ori, sim.simx_opmode_streaming)            
+            
+    #         lastTime = now
+    #         now = datetime.datetime.now()
+    #         if(pathControl.pathIter != lastIter):
+    #             sim.simxSetObjectPosition(clientID, QuadricopterT, -1, pathControl.path[pathControl.pathIter], sim.simx_opmode_streaming)
+    #             print("Loop time: ", (lastTime-now).microseconds, "[us]")
+    #             lastIter = pathControl.pathIter
             
     pathControl.iterRun_stop()
     sim.simxStopSimulation(clientID, sim.simx_opmode_blocking)

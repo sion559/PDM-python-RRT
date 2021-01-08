@@ -46,7 +46,7 @@ class Quadcopter():
             self.quads[key]['I'] = np.array([[ixx,0,0],[0,iyy,0],[0,0,izz]])
             self.quads[key]['invI'] = np.linalg.inv(self.quads[key]['I'])
         self.run = True
-
+   
     def rotation_matrix(self,angles):
         ct = math.cos(angles[0])
         cp = math.cos(angles[1])
@@ -57,6 +57,7 @@ class Quadcopter():
         R_x = np.array([[1,0,0],[0,ct,-st],[0,st,ct]])
         R_y = np.array([[cp,0,sp],[0,1,0],[-sp,0,cp]])
         R_z = np.array([[cg,-sg,0],[sg,cg,0],[0,0,1]])
+        #return np.matmul(R_x,np.matmul(R_y,R_z))
         R = np.dot(R_z, np.dot( R_y, R_x ))
         return R
 
@@ -125,12 +126,14 @@ class Quadcopter():
         return self.time
 
     def thread_run(self,dt,time_scaling):
-        rate = time_scaling*dt
+        #EDIT 10**3 was 1
+        rate = 10**6 * dt * time_scaling
         last_update = self.time
         while(self.run==True):
             time.sleep(0)
             self.time = datetime.datetime.now()
-            if (self.time-last_update).total_seconds() > rate:
+            #EDIT >= was >, microseconds was total_seconds
+            if (self.time-last_update).microseconds >= rate:
                 self.update(dt)
                 last_update = self.time
 

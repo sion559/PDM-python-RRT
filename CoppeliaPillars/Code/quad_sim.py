@@ -7,10 +7,10 @@ from rrt_star import RRTStar
 #https://github.com/abhijitmajumdar/Quadcopter_simulator
 
 # Constants
-TIME_SCALING = 2.0 # Any positive number(Smaller is faster). 1.0->Real Time, 0.0->Run as fast as possible
+TIME_SCALING = 1.0 # Any positive number(Smaller is faster). 1.0->Real Time, 0.0->Run as fast as possible
 QUAD_DYNAMICS_UPDATE = 0.002 # seconds
 CONTROLLER_DYNAMICS_UPDATE = 0.002 # seconds
-NEXT_GOAL_DISTANCE = 0.5      #distance from current potion to path node neccesary to move to the next path node
+NEXT_GOAL_DISTANCE = 0.8      #distance from current potion to path node neccesary to move to the next path node
 MINIMAL_END_DISTANCE = 0.1  #distance from end goal that indicated succesfull reach
 END_GOAL_VELOCITY = 0.01    #velocity at the end goal the indicates succesfull reach
 
@@ -47,9 +47,11 @@ class quadsim_P2P:
         
         self.start = start
         self.obs = obstacles
+        self.path = []
         self.planReady = False
         self.iterRunGo = False
         self.pathIter = 0
+        self.goalIter = 0
         
         self.QUADCOPTER={'q1':{'position':start,'orientation':[0,0,0],'L':0.175,'r':0.0665,'prop_size':[8,3.8],'weight':0.5, 'motorWeight':0.035}}
         # Controller parameters
@@ -58,8 +60,9 @@ class quadsim_P2P:
                             'Yaw_Control_Limits':[-900,900],
                             'Z_XY_offset':500,
                             #'Linear_PID':{'P':[1,1,23.33]*300,'I':[0.01,0.01,1.112]*4,'D':[3,3,33]*150},
-                            #'Linear_PID':{'P':[290,290,6000],'I':[0.042,0.042,5],'D':[410,410,5000]},
-                            'Linear_PID':{'P':[300,300,6100],'I':[0.055,0.055,7],'D':[400,400,6500]},
+                            'Linear_PID':{'P':[290,290,6000],'I':[0.042,0.042,5],'D':[410,410,5000]},
+                            #'Linear_PID':{'P':[300,300,6100],'I':[0.055,0.055,7],'D':[400,400,6500]},
+                            #'Linear_PID':{'P':[200,200,4000],'I':[0.05,0.05,7],'D':[300,300,7000]},
                             'Linear_To_Angular_Scaler':[1,1,0],
                             'Yaw_Rate_Scaler':0.18,
                             'Angular_PID':{'P':[22000,22000,1500],'I':[0,0,1.2],'D':[12000,12000,0]},
@@ -67,9 +70,9 @@ class quadsim_P2P:
     
         # Make objects for quadcopter, gui and controller
         self.quad = quadcopter.Quadcopter(self.QUADCOPTER)
-        self.gui_object = gui.GUI(quads=self.QUADCOPTER, obs=obstacles)
+        #self.gui_object = gui.GUI(quads=self.QUADCOPTER, obs=obstacles)
         self.ctrl = controller.Controller_PID_Point2Point(self.quad.get_state,self.quad.get_time,self.quad.set_motor_speeds,params=self.CONTROLLER_PARAMETERS,quad_identifier='q1')
-        self.rrt = RRTStar(obstacle_list=self.obs, max_iter=1000, expand_dis=3.0, path_resolution=0.3) 
+        self.rrt = RRTStar(obstacle_list=self.obs, max_iter=300, expand_dis=3.0, path_resolution=0.3) 
       
     #HOMEBREW
     def iterRun_start(self):
@@ -78,15 +81,17 @@ class quadsim_P2P:
         use to start an iterative run
         
         """
-        #if not self.planReady:
-        #    return
+        if not self.planReady or self.iterRunGo:
+            print("controller start invallid")
+            return
         
         #self.yaw = self.List_Natural_Yaw();
         # Start the threads
         self.quad.start_thread(dt=QUAD_DYNAMICS_UPDATE,time_scaling=TIME_SCALING)
         self.ctrl.start_thread(update_rate=CONTROLLER_DYNAMICS_UPDATE,time_scaling=TIME_SCALING)
         self.iterRunGo = True
-        #self.pathIter = 0
+        self.goalIter = 0
+        self.pathIter = 0
         
         print("controller started")
         
@@ -108,19 +113,29 @@ class quadsim_P2P:
         vel_t = self.quad.get_linear_rate('q1')
         vel = vel_t[0]**2 + vel_t[1]**2 + vel_t[2]**2
         pos = self.quad.get_position('q1')
-        dist = self.dist(pos, self.path[self.pathIter])
+        dist = self.dist(pos, self.path[self.goalIter][self.pathIter])
+        pLen = len(self.path[self.goalIter])
         
         #move to the next path node if close enough to the current
-        if self.pathIter < self.rrt.pathLen-1:
+        if self.pathIter < pLen-1:
             if dist < NEXT_GOAL_DISTANCE:
                 self.pathIter +=1
-                print("Goal = ", self.path[self.pathIter])
-                self.ctrl.update_target(self.path[self.pathIter])
+                print("Going to goal[", self.pathIter, "] = ", self.path[self.goalIter][self.pathIter])
+                self.ctrl.update_target(self.path[self.goalIter][self.pathIter])
                 self.ctrl.update_yaw_target(self.yaw[self.pathIter])
         #force full stop at the end goal
-        elif self.pathIter == self.rrt.pathLen-1:
+        elif self.pathIter == pLen-1:
             if vel <= END_GOAL_VELOCITY and dist < MINIMAL_END_DISTANCE:
-                self.iterRunGo = False
+                print("Readched end goal[", self.goalIter, "] = ", self.path[self.goalIter][self.pathIter])
+                self.goalIter += 1
+                
+                #stop is the last goal has been reached
+                if self.goalIter >= len(self.path):
+                    self.iterRunGo = False
+                    return pos, self.quad.get_orientation('q1')
+                
+                self.yaw = self.List_Natural_Yaw();
+                self.pathIter = 0
                 
         return pos, self.quad.get_orientation('q1')
         
@@ -154,7 +169,7 @@ class quadsim_P2P:
         for i in range(len(self.path)):          
             self.ctrl.update_target(self.path[i])
             self.ctrl.update_yaw_target(yaw[i])
-            print("Goal = ", self.path[i])
+            print("Going to goal = ", self.path[i])
             #print("yl = ", len(yaw), " pl ", len(self.path))
             while(self.dist(self.quad.get_position('q1'), self.path[i]) > 1):
                 self.display()
@@ -197,6 +212,7 @@ class quadsim_P2P:
         set the drone to the start position
         """
         self.quad.set_position(self.start)
+        self.pathIter = 0
      
     #HOMEBREW
     def plan(self, goal):
@@ -209,21 +225,36 @@ class quadsim_P2P:
         
         goal: 3d-vector with the goal position
         """
-        begin = self.quad.get_position('q1')
         
-        self.rrt.prePlan(begin, goal)
-        path = self.rrt.planning()
-        if(path == None):
-            #widen search zone with larger cone and more iterations
-            self.rrt.searchTheta *= 1.1
-            self.rrt.maxiter += 200
-            return False
+        if self.planReady: 
+            print("a path already excists")
+            return True
         
-        self.path = path
+        if self.goalIter == 0 :
+            end = self.quad.get_position('q1')
+        else:
+            end = goal[self.goalIter-1]
+        
+        while self.goalIter < len(goal):
+            begin = end
+            end = goal[self.goalIter]
+            print("Planning for end goal: ", self.goalIter)
+            self.rrt.prePlan(begin, end)
+            path = self.rrt.planning()
+            if(path == None):
+                #widen search zone with larger cone and more iterations
+                self.rrt.searchTheta *= 1.2
+                self.rrt.max_iter += 100
+                return False
+            self.path.append(path)
+            
+            self.goalIter += 1
+            
         self.planReady = True
-        self.yaw = self.List_Natural_Yaw();
         self.pathIter = 0
-        self.iterRunGo = True
+        self.goalIter = 0
+        
+        self.yaw = self.List_Natural_Yaw();
         
         return True
     
@@ -250,9 +281,9 @@ class quadsim_P2P:
         Returns yaw value list
         """
         yaw = []
-        for Y in range(len(self.path)-1):
-            dx = self.path[Y+1][0] - self.path[Y][0]
-            dy = self.path[Y+1][1] - self.path[Y][1]
+        for Y in range(len(self.path[self.goalIter])-1):
+            dx = self.path[self.goalIter][Y+1][0] - self.path[self.goalIter][Y][0]
+            dy = self.path[self.goalIter][Y+1][1] - self.path[self.goalIter][Y][1]
             yaw.append(math.atan2(dy,dx))
         yaw.append(0)
         return yaw
