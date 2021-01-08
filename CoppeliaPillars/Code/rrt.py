@@ -74,6 +74,7 @@ class RRT:
         self.goal_node = self.end
         #setup for conical search
         self.goalDist, goalTheta, goalPhi = self.calc_distance_and_angle(self.start,self.end)
+        print("ANGLESSSSSSSSSSS", self.goalDist, "theta ", goalTheta, "phi ", goalPhi)
         self.goalDist *= 1.1
         self.goalDir = np.array([(goal[0]-start[0])/self.goalDist, (goal[1]-start[1])/self.goalDist, (goal[2]-start[2])/self.goalDist])
         ct = math.cos(goalTheta)
@@ -87,7 +88,7 @@ class RRT:
         #self.R = np.array([[math.cos(goalTheta)*math.cos(goalPhi), -math.sin(goalTheta), math.cos(goalTheta)*math.sin(goalPhi)],
         #                 [math.sin(goalTheta)*math.cos(goalPhi), math.cos(goalTheta), math.sin(goalTheta)*math.sin(goalPhi)],
         #                 [-math.sin(goalPhi), 0, -math.sin(goalPhi)]])
-        self.constSinTheta = math.cos(goalTheta/2)
+        self.constSinTheta = math.tan(goalTheta/2)
         
         for (ox, oy, oz, dx, dy, dz) in self.obstacle_list:
             ex = goal[0]-ox
@@ -194,7 +195,7 @@ class RRT:
         return math.hypot(math.hypot(dx,dy), dz)
     
     #HOMEBREW
-    def get_random_node(self):
+    def get_random_node(self, it):
         """
         get_random_node
         generate a random node from a conical field. 
@@ -207,13 +208,17 @@ class RRT:
             return self.end
         else:
             self.goal_sample -= 1
-            
+
+        dist = self.goalDist
+        if(it < 200): 
+            dist = (self.goalDist*it)/200 + self.connect_circle_dist
+
         #TODO generate in a cone
         L = random.uniform(0, self.goalDist)
         r = random.uniform(0, L*self.constSinTheta)
         p = random.uniform(0, 6.28)     #angle aroung goalDir
         #cone_center = self.goalDir*L
-        rNode = np.dot(self.R.T,np.array([L, r*math.cos(p), r*math.sin(p)]))
+        rNode = np.dot(self.R, np.array([L, r*math.cos(p), r*math.sin(p)]))
         #print(rNode)
         rnd = self.Node(rNode[0] + self.start.x, rNode[1] + self.start.y, rNode[2] + self.start.z)      
         

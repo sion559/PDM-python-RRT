@@ -7,6 +7,7 @@ author: Atsushi Sakai(@Atsushi_twi)
 """
 
 import math
+import sim
 #sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../RRT/")
 
 try:
@@ -29,12 +30,12 @@ class RRTStar(RRT):
 
     def __init__(self,
                  obstacle_list,
-                 searchTheta=3.14/4,
-                 expand_dis=50.0,
+                 searchTheta=1,
+                 expand_dis=1,
                  path_resolution=0.05,
                  goal_sample_rate=4,
-                 max_iter=300,
-                 connect_circle_dist=50.0,
+                 max_iter=10000,
+                 connect_circle_dist=2,
                  search_until_max_iter=False):
         """
         Setting Parameter
@@ -54,7 +55,7 @@ class RRTStar(RRT):
         self.searchTheta = searchTheta
 
     #edit for 3d
-    def planning(self):
+    def planning(self, clientID):
         """
         planning
         plan a path between the start and goal nodes.
@@ -64,7 +65,9 @@ class RRTStar(RRT):
         Returns path when a valid path is found
         
         """
-        
+        err, dodo = sim.simxGetObjectHandle(
+            clientID, 'dodo', sim.simx_opmode_blocking)
+
         if(self.imposible == True):
             return None        
         
@@ -72,7 +75,7 @@ class RRTStar(RRT):
         for i in range(self.max_iter):
             
             #generate random node
-            rnd = self.get_random_node()
+            rnd = self.get_random_node(i)
             
             #find nearest node
             nearest_ind = self.get_nearest_node_index(self.node_list, rnd)
@@ -93,7 +96,7 @@ class RRTStar(RRT):
                     self.node_list.append(node_with_updated_parent)
                 else:
                     self.node_list.append(new_node)
-
+                sim.simxSetObjectPosition(clientID, dodo, -1, [new_node.x,new_node.y,new_node.z], sim.simx_opmode_streaming)
             #check for the goal
             if ((not self.search_until_max_iter) and new_node):  # if reaches goal
                 last_index = self.search_best_goal_node()

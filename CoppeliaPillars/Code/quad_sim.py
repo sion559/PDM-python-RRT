@@ -11,8 +11,8 @@ TIME_SCALING = 1.0 # Any positive number(Smaller is faster). 1.0->Real Time, 0.0
 QUAD_DYNAMICS_UPDATE = 0.002 # seconds
 CONTROLLER_DYNAMICS_UPDATE = 0.002 # seconds
 NEXT_GOAL_DISTANCE = 0.8      #distance from current potion to path node neccesary to move to the next path node
-MINIMAL_END_DISTANCE = 0.1  #distance from end goal that indicated succesfull reach
-END_GOAL_VELOCITY = 0.01    #velocity at the end goal the indicates succesfull reach
+MINIMAL_END_DISTANCE = 0.5  #distance from end goal that indicated succesfull reach
+END_GOAL_VELOCITY = 0.1    #velocity at the end goal the indicates succesfull reach
 
 #moved functionality
 class quadsim_P2P:
@@ -70,9 +70,9 @@ class quadsim_P2P:
     
         # Make objects for quadcopter, gui and controller
         self.quad = quadcopter.Quadcopter(self.QUADCOPTER)
-        #self.gui_object = gui.GUI(quads=self.QUADCOPTER, obs=obstacles)
+        self.gui_object = gui.GUI(quads=self.QUADCOPTER, obs=obstacles)
         self.ctrl = controller.Controller_PID_Point2Point(self.quad.get_state,self.quad.get_time,self.quad.set_motor_speeds,params=self.CONTROLLER_PARAMETERS,quad_identifier='q1')
-        self.rrt = RRTStar(obstacle_list=self.obs, max_iter=300, expand_dis=3.0, path_resolution=0.3) 
+        self.rrt = RRTStar(obstacle_list=self.obs) 
       
     #HOMEBREW
     def iterRun_start(self):
@@ -215,7 +215,7 @@ class quadsim_P2P:
         self.pathIter = 0
      
     #HOMEBREW
-    def plan(self, goal):
+    def plan(self, goal, clientID):
         """
         plan
         use RRT* to plan the path for the drone to follow.
@@ -240,10 +240,10 @@ class quadsim_P2P:
             end = goal[self.goalIter]
             print("Planning for end goal: ", self.goalIter)
             self.rrt.prePlan(begin, end)
-            path = self.rrt.planning()
+            path = self.rrt.planning(clientID)
             if(path == None):
                 #widen search zone with larger cone and more iterations
-                self.rrt.searchTheta *= 1.2
+                # self.rrt.searchTheta *= 1.2
                 self.rrt.max_iter += 100
                 return False
             self.path.append(path)

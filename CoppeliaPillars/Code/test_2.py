@@ -8,6 +8,9 @@ import time
 import sys
 import datetime
 
+import matplotlib 
+import matplotlib.pyplot as plt 
+
 rad = math.radians
 
 speed = 0.5
@@ -63,10 +66,30 @@ def convert_bbox(pos, size):
 
     return new_size
 
+def write_boxes_file(box_list):
+    np.savetxt("boxes.csv", box_list, delimiter=",")
+
+def read_boxes_file():
+    return np.genfromtxt("boxes.csv", delimiter=",")
+
+def plot_boxes(box_list):
+    fig = plt.figure() 
+    for box in box_list:
+        ax = fig.add_subplot(111) 
+
+        rect1 = matplotlib.patches.Rectangle((box[0], box[1]), 
+                                            box[3], box[4], 
+                                            color ='green') 
+        ax.add_patch(rect1) 
+
+    plt.xlim([-30, 30]) 
+    plt.ylim([-30, 30]) 
+
+    plt.show()
    
 def main():
-    obst_count = 17
-    targetCount = 4
+    obst_count = 60
+    targetCount = 2
     startName='Start1'
     obstaclePrefix = 'column'
     targetPrefix = 'End'
@@ -91,26 +114,32 @@ def main():
     
     print("is connected!!!")
     
+
     
     #obstacle collection
     obst_list = []
     bbox_list = []
     #obstacles list
-    for i in range(obst_count):
-        err, Obst = sim.simxGetObjectHandle(
-            clientID, obstaclePrefix+str(i), sim.simx_opmode_blocking)
-        if err > 0:
-            print("could not retrieve column ", i)
-        obst_pose = flib.get_pos(clientID, Obst)
-        print("col ", i, "POSE: ", obst_pose)
-        obst_size = flib.get_size(clientID, Obst)
-        print("col ", i, "SIZE: ", obst_size)
-        obst_bbox = convert_bbox(obst_pose, obst_size)
-        print("col ", i, "BBOX: ", obst_bbox)
-        obst = Obstacle(obst_pose, obst_size, obst_bbox)
-        bbox_list.append(obst_bbox)
-        obst_list.append(obst)
-        
+    # for i in range(obst_count):
+    #     err, Obst = sim.simxGetObjectHandle(
+    #         clientID, obstaclePrefix+str(i), sim.simx_opmode_blocking)
+    #     if err > 0:
+    #         print("could not retrieve column ", i)
+    #     obst_pose = flib.get_pos(clientID, Obst)
+    #     print("col ", i, "POSE: ", obst_pose)
+    #     obst_size = flib.get_size(clientID, Obst)
+    #     print("col ", i, "SIZE: ", obst_size)
+    #     obst_bbox = convert_bbox(obst_pose, obst_size)
+    #     print("col ", i, "BBOX: ", obst_bbox)
+    #     obst = Obstacle(obst_pose, obst_size, obst_bbox)
+    #     bbox_list.append(obst_bbox)
+    #     obst_list.append(obst)
+    # write_boxes_file(bbox_list)
+
+    bbox_list = read_boxes_file()
+    #plot_boxes(bbox_list)
+    # print(bbox_list)
+
     #target collection
     deliveries = []
     for i in range(targetCount):
@@ -125,9 +154,10 @@ def main():
     
     #controller object
     pathControl = quadsim_P2P(pose, bbox_list)
-    
+
+
     #plan route
-    while not pathControl.plan(deliveries):
+    while not pathControl.plan(deliveries, clientID):
         print("Retrying planning with: max iterations=", pathControl.rrt.max_iter, ", search cone angle[Rad]=", pathControl.rrt.searchTheta)
         
     print("the path is worthy!")
@@ -158,7 +188,8 @@ def main():
             lastIter = pathControl.pathIter
             lastTime = now
             
-    
+        
+        
     
     # for target in deliveries:
     #     if pathControl.plan(target):
