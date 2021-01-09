@@ -218,7 +218,13 @@ class RRT:
             dist = (self.goalDist*it)/200 + self.connect_circle_dist
 
         #TODO generate in a cone
-        L = random.uniform(0, self.goalDist)
+        L = random.uniform(0, dist)
+        if(L < self.connect_circle_dist):
+            a = self.connect_circle_dist
+            return self.Node(random.uniform(self.start.x-a, self.start.x+a),
+                             random.uniform(self.start.y-a, self.start.y+a),
+                             random.uniform(self.start.z-a, self.start.z+a))
+        
         r = random.uniform(0, L*self.constSinTheta)
         p = random.uniform(0, 6.28)     #angle aroung goalDir
         #cone_center = self.goalDir*L

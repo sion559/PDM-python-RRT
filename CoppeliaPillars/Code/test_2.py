@@ -88,7 +88,7 @@ def plot_boxes(box_list):
     plt.show()
    
 def main():
-    obst_count = 60
+    obst_count = 68
     targetCount = 2
     startName='Start1'
     obstaclePrefix = 'column'
@@ -117,23 +117,23 @@ def main():
 
     
     #obstacle collection
-    obst_list = []
-    bbox_list = []
-    #obstacles list
+    # obst_list = []
+    # bbox_list = []
+    # #obstacles_list
     # for i in range(obst_count):
-    #     err, Obst = sim.simxGetObjectHandle(
-    #         clientID, obstaclePrefix+str(i), sim.simx_opmode_blocking)
-    #     if err > 0:
-    #         print("could not retrieve column ", i)
-    #     obst_pose = flib.get_pos(clientID, Obst)
-    #     print("col ", i, "POSE: ", obst_pose)
-    #     obst_size = flib.get_size(clientID, Obst)
-    #     print("col ", i, "SIZE: ", obst_size)
-    #     obst_bbox = convert_bbox(obst_pose, obst_size)
-    #     print("col ", i, "BBOX: ", obst_bbox)
-    #     obst = Obstacle(obst_pose, obst_size, obst_bbox)
-    #     bbox_list.append(obst_bbox)
-    #     obst_list.append(obst)
+    #      err, Obst = sim.simxGetObjectHandle(
+    #          clientID, obstaclePrefix+str(i), sim.simx_opmode_blocking)
+    #      if err > 0:
+    #          print("could not retrieve column ", i)
+    #      obst_pose = flib.get_pos(clientID, Obst)
+    #      print("col ", i, "POSE: ", obst_pose)
+    #      obst_size = flib.get_size(clientID, Obst)
+    #      print("col ", i, "SIZE: ", obst_size)
+    #      obst_bbox = convert_bbox(obst_pose, obst_size)
+    #      print("col ", i, "BBOX: ", obst_bbox)
+    #      obst = Obstacle(obst_pose, obst_size, obst_bbox)
+    #      bbox_list.append(obst_bbox)
+    #      obst_list.append(obst)
     # write_boxes_file(bbox_list)
 
     bbox_list = read_boxes_file()

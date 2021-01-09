@@ -243,8 +243,8 @@ class quadsim_P2P:
             path = self.rrt.planning(clientID)
             if(path == None):
                 #widen search zone with larger cone and more iterations
-                # self.rrt.searchTheta *= 1.2
-                self.rrt.max_iter += 100
+                self.rrt.searchTheta += 0.3
+                self.rrt.max_iter += 1000
                 return False
             self.path.append(path)
             

@@ -31,8 +31,8 @@ class RRTStar(RRT):
 
     def __init__(self,
                  obstacle_list,
-                 searchTheta=1,
-                 expand_dis=1,
+                 searchTheta=3.14/4,
+                 expand_dis=1.5,
                  path_resolution=0.05,
                  goal_sample_rate=4,
                  max_iter=10000,
@@ -78,8 +78,8 @@ class RRTStar(RRT):
             
             #generate random node
             rnd = self.get_random_node(i)
-            sim.simxSetObjectPosition(clientID, dodo, -1, [rnd.x, rnd.y, rnd.z] 
-                , sim.simx_opmode_streaming)
+            #sim.simxSetObjectPosition(clientID, dodo, -1, [rnd.x, rnd.y, rnd.z] 
+            #    , sim.simx_opmode_streaming)
             # sim.simxSetObjectPosition(clientID, dodo, -1, [self.start.x, self.start.y, self.start.z] 
             #     + np.dot(self.R.T, np.array([1, 0, 0]) * self.calc_dist_to_goal(rnd.x, rnd.y, rnd.z)), sim.simx_opmode_streaming)
 
@@ -102,6 +102,8 @@ class RRTStar(RRT):
                     self.node_list.append(node_with_updated_parent)
                 else:
                     self.node_list.append(new_node)
+                sim.simxSetObjectPosition(clientID, dodo, -1, [new_node.x, new_node.y, new_node.z] 
+                , sim.simx_opmode_streaming)
                
             #check for the goal
             if ((not self.search_until_max_iter) and new_node):  # if reaches goal
