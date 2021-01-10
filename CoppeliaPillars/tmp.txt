@@ -1,7 +1,0 @@
-    #obstacles list
-    for i in range(obst_count):
-        string = 'column'+str(i)
-        err, Obst = sim.simxGetObjectHandle(clientID, string, sim.simx_opmode_blocking)
-        obst_pose = flib.get_pos(clientID, Obst)
-        print(string, "=", obst_pose)
-        obst_list.append(obst_pose)
