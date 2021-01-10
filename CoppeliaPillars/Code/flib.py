@@ -96,6 +96,7 @@ def get_rot(clientID, QuadricopterT):
 # def simxGetFloatingParameter(clientID, paramIdentifier, operationMode):
 #self.set_float_parameter(vrep.sim_floatparam_simulation_time_step, 25)
 
+#HOMEBREW
 #these are the parameters you can obtain https://github.com/ycps/vrep-env/blob/fd64b390e3ebb1409e68de423969e888b9730a6f/vrep_env/vrep.py
 def get_size(clientID, obstacle):
     size = np.empty(6)

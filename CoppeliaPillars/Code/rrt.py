@@ -40,7 +40,8 @@ class RRT:
                  expand_dis=3.0,
                  path_resolution=0.5,
                  goal_sample_rate=5,
-                 max_iter=500):
+                 max_iter=500,
+                 use_funnel=True):
         """
         Setting Parameter
 
@@ -59,6 +60,7 @@ class RRT:
         self.obstacle_list = obstacle_list
         self.node_list = []
         self.imposible = True
+        self.use_funnel = use_funnel
        
     #HOMEBREW
     def prePlan(self, start, goal):
@@ -115,7 +117,11 @@ class RRT:
         
         self.node_list = [self.start]
         for i in range(self.max_iter):
-            rnd_node = self.get_random_node()
+            rnd_node = None
+            if self.use_funnel:
+                rnd_node = self.get_random_funnel_node()
+            else:
+                rnd_node = self.get_random_node()
             nearest_ind = self.get_nearest_node_index(self.node_list, rnd_node)
             nearest_node = self.node_list[nearest_ind]
 
@@ -194,9 +200,15 @@ class RRT:
         dy = y - self.end.y
         dz = z - self.end.z
         return math.hypot(math.hypot(dx,dy), dz)
+
+    #Values are a bit larger than the size of the city in the simulation
+    def get_random_node(self):
+        return self.Node(random.uniform(-15, 15),
+                         random.uniform(-15, 15),
+                         random.uniform(-15, 15))
     
     #HOMEBREW
-    def get_random_node(self, it):
+    def get_random_funnel_node(self, it):
         """
         get_random_node
         generate a random node from a conical field. 

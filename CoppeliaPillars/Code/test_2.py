@@ -52,6 +52,7 @@ def get_near_obst(current_pose, obst_array):
 
     return near_pose, dist
 
+#HOMEBREW
 def convert_bbox(pos, size):
     #by default it gives the opposite corners of the bbox.
     # by substracting the starting point, it is defined as 
@@ -86,6 +87,19 @@ def plot_boxes(box_list):
     plt.ylim([-30, 30]) 
 
     plt.show()
+
+def calc_distance(a, b):
+    diff = a - b
+    return np.sqrt( diff.dot(diff) ) 
+
+def calc_total_distance(start, targets):
+    total_distance = calc_distance(start, targets[0])
+    print(total_distance)
+    if len(targets) > 1:
+        for i in range(len(targets) - 1):
+            print(total_distance)
+            total_distance = calc_distance(targets[i], targets[i+1])
+    return total_distance
    
 def main():
     obst_count = 68
@@ -115,7 +129,7 @@ def main():
     print("is connected!!!")
     
 
-    
+    #retrieves the boxes from coppeliasim. This is slow
     #obstacle collection
     # obst_list = []
     # bbox_list = []
@@ -134,6 +148,7 @@ def main():
     #      obst = Obstacle(obst_pose, obst_size, obst_bbox)
     #      bbox_list.append(obst_bbox)
     #      obst_list.append(obst)
+    #we write the boxes to a file to retrieve faster later.
     # write_boxes_file(bbox_list)
 
     bbox_list = read_boxes_file()
@@ -146,29 +161,36 @@ def main():
         err, targ = sim.simxGetObjectHandle(
             clientID, 'End'+str(i+1), sim.simx_opmode_blocking)
         tmp = flib.get_pos(clientID, targ)
-        deliveries.append([tmp[0],tmp[1],tmp[2]])
+        print("Target ", i, "Location: ", tmp)
+        deliveries.append(np.array([tmp[0],tmp[1],tmp[2]]))
     
-    print(deliveries)
         
     pose = flib.get_pos(clientID, Quadricopter)
-    
+    print("Start position: ", pose)
+
+    print("Total distance: ", calc_total_distance(pose, deliveries))
+
     #controller object
     pathControl = quadsim_P2P(pose, bbox_list)
 
 
     #plan route
+    before_rrt_t = datetime.datetime.now()
     while not pathControl.plan(deliveries, clientID):
-        print("Retrying planning with: max iterations=", pathControl.rrt.max_iter, ", search cone angle[Rad]=", pathControl.rrt.searchTheta)
-        
-    print("the path is worthy!")
+        print("Retrying planning with: max iterations=", pathControl.rrt.max_iter)
+        if pathControl.rrt.use_funnel:
+            print("search cone angle[Rad]=", pathControl.rrt.searchTheta)
+    print("the path is worthy! Calculation took: ", (datetime.datetime.now() - before_rrt_t).total_seconds(), " seconds.")
              
     lastIter = -1
     
     #start simulation
     pathControl.iterRun_start() 
+
+
     sim.simxStartSimulation(clientID, sim.simx_opmode_oneshot)
     sim.simxSynchronous(clientID,1)
-    lastTime = datetime.datetime.now();
+    lastTime = datetime.datetime.now()
     now = datetime.datetime.now()
     
     while pathControl.iterRunGo:

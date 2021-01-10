@@ -35,9 +35,10 @@ class RRTStar(RRT):
                  expand_dis=1.5,
                  path_resolution=0.05,
                  goal_sample_rate=4,
-                 max_iter=10000,
+                 max_iter=100,
                  connect_circle_dist=4,
-                 search_until_max_iter=False):
+                 search_until_max_iter=False,
+                 use_funnel = True):
         """
         Setting Parameter
 
@@ -50,7 +51,7 @@ class RRTStar(RRT):
 
         """
         super().__init__(obstacle_list, expand_dis,
-                         path_resolution, goal_sample_rate, max_iter)
+                         path_resolution, goal_sample_rate, max_iter, use_funnel)
         self.connect_circle_dist = connect_circle_dist
         self.search_until_max_iter = search_until_max_iter
         self.searchTheta = searchTheta
@@ -76,8 +77,12 @@ class RRTStar(RRT):
         self.node_list = [self.start]
         for i in range(self.max_iter):
             
+            rnd = None
             #generate random node
-            rnd = self.get_random_node(i)
+            if self.use_funnel:
+                rnd = self.get_random_funnel_node(i)
+            else:
+                rnd = self.get_random_node()
             #sim.simxSetObjectPosition(clientID, dodo, -1, [rnd.x, rnd.y, rnd.z] 
             #    , sim.simx_opmode_streaming)
             # sim.simxSetObjectPosition(clientID, dodo, -1, [self.start.x, self.start.y, self.start.z] 
