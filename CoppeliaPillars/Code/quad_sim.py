@@ -2,6 +2,8 @@ import quadcopter,gui,controller
 import argparse
 import math
 from rrt_star import RRTStar
+import datetime
+import numpy as np
 
 #original auther:
 #https://github.com/abhijitmajumdar/Quadcopter_simulator
@@ -13,6 +15,7 @@ CONTROLLER_DYNAMICS_UPDATE = 0.002 # seconds
 NEXT_GOAL_DISTANCE = 0.4      #distance from current potion to path node neccesary to move to the next path node
 MINIMAL_END_DISTANCE = 0.2  #distance from end goal that indicated succesfull reach
 END_GOAL_VELOCITY = 0.1    #velocity at the end goal the indicates succesfull reach
+
 
 #moved functionality
 class quadsim_P2P:
@@ -48,6 +51,7 @@ class quadsim_P2P:
         self.start = start
         self.obs = obstacles
         self.path = []
+        self.iteration_data = []
         self.planReady = False
         self.iterRunGo = False
         self.pathIter = 0
@@ -215,7 +219,7 @@ class quadsim_P2P:
         self.pathIter = 0
      
     #HOMEBREW
-    def plan(self, goal, clientID):
+    def plan(self, goal, clientID = 0):
         """
         plan
         use RRT* to plan the path for the drone to follow.
@@ -236,6 +240,7 @@ class quadsim_P2P:
             end = goal[self.goalIter-1]
         
         while self.goalIter < len(goal):
+            before_rrt_t = datetime.datetime.now() 
             begin = end
             end = goal[self.goalIter]
             print("Planning for end goal: ", self.goalIter)
@@ -247,6 +252,11 @@ class quadsim_P2P:
                 self.rrt.max_iter += 1000
                 return False
             self.path.append(self.zoomPath(path, 3))
+
+            self.iteration_data.append( np.array([(datetime.datetime.now() - before_rrt_t).total_seconds(),
+                                        self.rrt.nodes,
+                                        self.rrt.nr_iterations]))
+            print("the path is worthy! Calculation took: ", (datetime.datetime.now() - before_rrt_t).total_seconds(), " seconds.")
             
             self.goalIter += 1
             

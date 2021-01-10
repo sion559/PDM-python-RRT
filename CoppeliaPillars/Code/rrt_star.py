@@ -116,6 +116,8 @@ class RRTStar(RRT):
                 if last_index is not None:
                     tmp = self.generate_final_course(last_index)
                     tmp.reverse()
+                    self.nr_iterations = i
+                    self.nodes = len(self.node_list)
                     print("Iter:", i, ", number of nodes:", len(self.node_list))
                     return tmp
 
