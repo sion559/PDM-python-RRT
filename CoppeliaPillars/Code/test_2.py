@@ -89,7 +89,7 @@ def plot_boxes(box_list):
    
 def main():
     obst_count = 68
-    targetCount = 2
+    targetCount = 3
     startName='Start1'
     obstaclePrefix = 'column'
     targetPrefix = 'End'
