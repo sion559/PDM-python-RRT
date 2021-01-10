@@ -57,7 +57,7 @@ class Quadcopter():
         R_x = np.array([[1,0,0],[0,ct,-st],[0,st,ct]])
         R_y = np.array([[cp,0,sp],[0,1,0],[-sp,0,cp]])
         R_z = np.array([[cg,-sg,0],[sg,cg,0],[0,0,1]])
-        #return np.matmul(R_x,np.matmul(R_y,R_z))
+        #return np.matmul(np.matmul(R_x,R_y), R_z)
         R = np.dot(R_z, np.dot( R_y, R_x ))
         return R
 
@@ -81,7 +81,9 @@ class Quadcopter():
         state_dot[8] = self.quads[key]['state'][11]
         # The angular accelerations
         omega = self.quads[key]['state'][9:12]
-        tau = np.array([self.quads[key]['L']*(self.quads[key]['m1'].thrust-self.quads[key]['m3'].thrust), self.quads[key]['L']*(self.quads[key]['m2'].thrust-self.quads[key]['m4'].thrust), self.b*(self.quads[key]['m1'].thrust-self.quads[key]['m2'].thrust+self.quads[key]['m3'].thrust-self.quads[key]['m4'].thrust)])
+        tau = np.array([self.quads[key]['L']*(self.quads[key]['m1'].thrust-self.quads[key]['m3'].thrust),
+                        self.quads[key]['L']*(self.quads[key]['m2'].thrust-self.quads[key]['m4'].thrust),
+                        self.b*(self.quads[key]['m1'].thrust-self.quads[key]['m2'].thrust+self.quads[key]['m3'].thrust-self.quads[key]['m4'].thrust)])
         omega_dot = np.dot(self.quads[key]['invI'], (tau - np.cross(omega, np.dot(self.quads[key]['I'],omega))))
         state_dot[9] = omega_dot[0]
         state_dot[10] = omega_dot[1]

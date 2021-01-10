@@ -10,8 +10,8 @@ from rrt_star import RRTStar
 TIME_SCALING = 1.0 # Any positive number(Smaller is faster). 1.0->Real Time, 0.0->Run as fast as possible
 QUAD_DYNAMICS_UPDATE = 0.002 # seconds
 CONTROLLER_DYNAMICS_UPDATE = 0.002 # seconds
-NEXT_GOAL_DISTANCE = 0.8      #distance from current potion to path node neccesary to move to the next path node
-MINIMAL_END_DISTANCE = 0.5  #distance from end goal that indicated succesfull reach
+NEXT_GOAL_DISTANCE = 0.4      #distance from current potion to path node neccesary to move to the next path node
+MINIMAL_END_DISTANCE = 0.2  #distance from end goal that indicated succesfull reach
 END_GOAL_VELOCITY = 0.1    #velocity at the end goal the indicates succesfull reach
 
 #moved functionality
@@ -246,7 +246,7 @@ class quadsim_P2P:
                 self.rrt.searchTheta += 0.3
                 self.rrt.max_iter += 1000
                 return False
-            self.path.append(path)
+            self.path.append(self.zoomPath(path, 3))
             
             self.goalIter += 1
             
@@ -257,6 +257,25 @@ class quadsim_P2P:
         self.yaw = self.List_Natural_Yaw();
         
         return True
+    
+    #HOMEBREW
+    def zoomPath(self, path, zoom):
+        """
+        zoomPath
+        create a number of nodes between nodes of an existing path
+        
+        path: existing path
+        zoom: number of new nodes to add plus 1
+        """
+        new_path = []
+        for i in range(len(path)-1):
+            new_path.append(path[i])
+            for a in range(1,zoom):
+                dx = (path[i+1][0] - path[i][0])*a/zoom
+                dy = (path[i+1][1] - path[i][1])*a/zoom
+                dz = (path[i+1][2] - path[i][2])*a/zoom
+                new_path.append([dx+path[i][0], dy+path[i][1], dz+path[i][2]])
+        return new_path
     
     #HOMEBREW
     def dist(self, A, B):
