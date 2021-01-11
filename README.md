@@ -2,7 +2,7 @@
 
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
-This is the repository for the Planning & Descision making class project of 2020 by S, van Gemer, A. Elferink, N. Duursma, and L. Peeters.
+This is the repository for the Planning & Descision making class project of 2020 by S. van Gemert, A. Elferink, N. Duursma, and L. Peeters.
 The projects implements an altered version of the RRT* algorithm by [AtsushiSakai](https://github.com/AtsushiSakai/PythonRobotics) and a drone PID controller by [Abhijitmajumdar](https://github.com/abhijitmajumdar/Quadcopter_simulator).
 The drone and path are visualized in [Coppeliasim](https://www.coppeliarobotics.com/)
 
