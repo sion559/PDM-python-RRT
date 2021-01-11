@@ -1,8 +1,8 @@
-# Drone delivery in cities to balconies throughfunneled RRT*
+# Drone delivery in cities to balconies through funneled RRT*
 
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
-This is the repository for the Planning & Descision making class project of 2020 by S. van Gemert, A. Elferink, N. Duursma, and L. Peeters.
+This is the repository for the Planning & Descision Making class project of 2020-2021 by S. van Gemert, A. Elferink, N. Duursma, and L. Peeters.
 The projects implements an altered version of the RRT* algorithm by [AtsushiSakai](https://github.com/AtsushiSakai/PythonRobotics) and a drone PID controller by [Abhijitmajumdar](https://github.com/abhijitmajumdar/Quadcopter_simulator).
 The drone and path are visualized in [Coppeliasim](https://www.coppeliarobotics.com/)
 
@@ -30,6 +30,7 @@ The drone and path are visualized in [Coppeliasim](https://www.coppeliarobotics.
 ## Usage
 
 1. Start Coppeliasim and open 'quadcopter.ttt'
+
 2. To run the simulation open and run the 'coppeliasim-remote.py' in the 'Code' folder.
 	- The simulation starts and ends automaticly.
 	- You can move the Start and End shapes in Coppeliasim to alter the drones path.
@@ -43,6 +44,7 @@ The drone and path are visualized in [Coppeliasim](https://www.coppeliarobotics.
     			targetPrefix = 'End' #<--- end goal pre-fix
 	```
 	- The simulation can in very specific cases crash and stop working. In that case, close python first before stopping the simulation in coppeliasim.
+
 3. Preformance data can be generated with the 'results-generator.py'. This operates based on 'boxes.csv', 'pose.csv', and 'targets.csv'.
 	- To generate new files enable the option in 'coppeliasim-remote.py'
 	```
@@ -50,6 +52,7 @@ The drone and path are visualized in [Coppeliasim](https://www.coppeliarobotics.
 		GENERATE_FILES = False
 	```
 	- Data can be processed into graphs with 'data_processing.py' in de 'data' folder
+
 4. RRT* variables can be edditer in the constructor in 'rrt_star.py'
 	```
 		def __init__(self,
@@ -63,6 +66,7 @@ The drone and path are visualized in [Coppeliasim](https://www.coppeliarobotics.
                  	search_until_max_iter=False,
                  	use_funnel = True):
 	```
+
 5. Path following constraints and timing can be adjust in 'quad_sim.py'
 	```
 		# Constants
@@ -73,6 +77,7 @@ The drone and path are visualized in [Coppeliasim](https://www.coppeliarobotics.
 		MINIMAL_END_DISTANCE = 0.2  #distance from end goal that indicated succesfull reach
 		END_GOAL_VELOCITY = 0.1    #velocity at the end goal the indicates succesfull reach
 	```
+
 6. Controller settings can be found in the constructor in 'quad_sim.py'
 	```
 	# Controller parameters
