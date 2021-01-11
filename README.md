@@ -31,9 +31,9 @@ The drone and path are visualized in [Coppeliasim](https://www.coppeliarobotics.
 
 1. Start Coppeliasim and open 'quadcopter.ttt'
 2. To run the simulation open and run the 'coppeliasim-remote.py' in the 'Code' folder.
-	2.1 The simulation starts and ends automaticly.
-	2.2 You can move the Start and End shapes in Coppeliasim to alter the drones path.
-	2.3 You can add additional end point. The need to be numbered consequetivel(1..x) and named with the assigned prefix.
+	- The simulation starts and ends automaticly.
+	- You can move the Start and End shapes in Coppeliasim to alter the drones path.
+	- You can add additional end point. The need to be numbered consequetivel(1..x) and named with the assigned prefix.
 		The number of end points need to edited in python by changing the amount here in 'coppeliasim-remote.py'
 	```
 		def main():
@@ -42,14 +42,14 @@ The drone and path are visualized in [Coppeliasim](https://www.coppeliarobotics.
     			obstaclePrefix = 'column'
     			targetPrefix = 'End' #<--- end goal pre-fix
 	```
-	2.4 The simulation can in very specific cases crash and stop working. In that case, close python first before stopping the simulation in coppeliasim.
+	- The simulation can in very specific cases crash and stop working. In that case, close python first before stopping the simulation in coppeliasim.
 3. Preformance data can be generated with the 'results-generator.py'. This operates based on 'boxes.csv', 'pose.csv', and 'targets.csv'.
-	3.1 To generate new files enable the option in 'coppeliasim-remote.py'
+	- To generate new files enable the option in 'coppeliasim-remote.py'
 	```
 		#enable to generate new 'boxes.csv', 'pose.csv', and 'targets.csv'.
 		GENERATE_FILES = False
 	```
-	3.2 Data can be processed into graphs with 'data_processing.py' in de 'data' folder
+	- Data can be processed into graphs with 'data_processing.py' in de 'data' folder
 4. RRT* variables can be edditer in the constructor in 'rrt_star.py'
 	```
 		def __init__(self,
