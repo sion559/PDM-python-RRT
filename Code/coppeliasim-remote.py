@@ -15,7 +15,8 @@ import matplotlib.pyplot as plt
 
 #This entire file is HOMEBREW
 
-
+#enable to generate new 'boxes.csv', 'pose.csv', and 'targets.csv'.
+GENERATE_FILES = False
 
 def convert_bbox(pos, size):
     #by default it gives the opposite corners of the bbox.
@@ -68,7 +69,6 @@ def calc_total_distance(start, targets):
 def main():
     obst_count = 68
     targetCount = 5
-    startName='Start1'
     obstaclePrefix = 'column'
     targetPrefix = 'End'
     
@@ -95,25 +95,25 @@ def main():
 
     #retrieves the boxes from coppeliasim. This is slow (which is why it is commented out, we read from file instead)
     #obstacle collection
-    # obst_list = []
-    # bbox_list = []
-    # #obstacles_list
-    # for i in range(obst_count):
-    #      err, Obst = sim.simxGetObjectHandle(
-    #          clientID, obstaclePrefix+str(i), sim.simx_opmode_blocking)
-    #      if err > 0:
-    #          print("could not retrieve column ", i)
-    #      obst_pose = flib.get_pos(clientID, Obst)
-    #      print("col ", i, "POSE: ", obst_pose)
-    #      obst_size = flib.get_size(clientID, Obst)
-    #      print("col ", i, "SIZE: ", obst_size)
-    #      obst_bbox = convert_bbox(obst_pose, obst_size)
-    #      print("col ", i, "BBOX: ", obst_bbox)
-    #      obst = Obstacle(obst_pose, obst_size, obst_bbox)
-    #      bbox_list.append(obst_bbox)
-    #      obst_list.append(obst)
-    #we write the boxes to a file to retrieve faster later.
-    # write_boxes_file(bbox_list)
+    #obst_list = []
+    bbox_list = []
+    if GENERATE_FILES:
+        for i in range(obst_count):
+             err, Obst = sim.simxGetObjectHandle(
+                 clientID, obstaclePrefix+str(i), sim.simx_opmode_blocking)
+             if err > 0:
+                 print("could not retrieve column ", i)
+             obst_pose = flib.get_pos(clientID, Obst)
+             print("col ", i, "POSE: ", obst_pose)
+             obst_size = flib.get_size(clientID, Obst)
+             print("col ", i, "SIZE: ", obst_size)
+             obst_bbox = convert_bbox(obst_pose, obst_size)
+             print("col ", i, "BBOX: ", obst_bbox)
+             #obst = Obstacle(obst_pose, obst_size, obst_bbox)
+             bbox_list.append(obst_bbox)
+             #obst_list.append(obst)
+        #we write the boxes to a file to retrieve faster later.
+        write_boxes_file(bbox_list)
 
     bbox_list = read_boxes_file()
     #plot_boxes(bbox_list)
@@ -121,15 +121,21 @@ def main():
 
     #target collection
     deliveries = []
+    
     for i in range(targetCount):
         err, targ = sim.simxGetObjectHandle(
-            clientID, 'End'+str(i+1), sim.simx_opmode_blocking)
+                clientID, targetPrefix+str(i+1), sim.simx_opmode_blocking)
         tmp = flib.get_pos(clientID, targ)
         print("Target ", i, "Location: ", tmp)
         deliveries.append(np.array([tmp[0],tmp[1],tmp[2]]))
+    if GENERATE_FILES:
+        np.savetxt("targets.csv", deliveries, delimiter=",")
+      
     
-        
     pose = flib.get_pos(clientID, Quadricopter)
+    if GENERATE_FILES:
+        np.savetxt("pose.csv", pose, delimiter=",")
+    
     print("Start position: ", pose)
 
     print("Total distance: ", calc_total_distance(pose, deliveries))
